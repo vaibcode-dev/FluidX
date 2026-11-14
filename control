@@ -1,8 +1,8 @@
-Package: com.angelss.mytweak
-Name: MyTweak
-Version: 0.0.1
+Package: com.angelss.customgestures
+Name: CustomGestures
+Version: 0.1.0
 Architecture: iphoneos-arm64
-Description: Мой первый rootless-твик для iPhone 7 / iOS 15
+Description: Жесты iPhone X для устройств с кнопкой Home (iOS 15, rootless)
 Maintainer: angelss
 Author: angelss
 Section: Tweaks

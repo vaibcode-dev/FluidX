@@ -1,153 +1,118 @@
-# MyTweak — твик для iPhone 7 / iOS 15.8.8 (rootless)
+# CustomGestures
 
-Готовый каркас твика на [Theos](https://theos.dev): сборка идёт в GitHub Actions,
-поэтому в Windows ничего устанавливать не нужно — только скачать готовый `.deb`.
+Жесты iPhone X для iPhone 7 на iOS 15.x (rootless). Аналог GesturesXV, но:
+родной движок жестов SpringBoard вместо самописных распознавателей,
+настройки внешнего вида полоски и починка анимации Пункта управления.
 
----
-
-## 0. Важно про джейлбрейк
-
-**Dopamine твоему iPhone 7 не подойдёт.** Он официально поддерживает только
-устройства с процессором **arm64e (A12 и новее)** и iOS **15.0–15.4.1**.
-iPhone 7 — это arm64 (A10), а iOS 15.8.8 сильно новее.
-
-Правильный вариант для iPhone 7 на iOS 15 — **palera1n** (эксплойт checkm8,
-поддерживает A8–A11 и iOS 15.0+). Он умеет как раз **rootless**-режим,
-под который сделан этот проект.
-
-На Windows у palera1n нет нативной поддержки, поэтому используется загрузочная
-флешка **Palen1x**:
-
-1. Возьми USB-флешку от 2 ГБ (содержимое будет стёрто).
-2. Скачай образ Palen1x с официального сайта <https://palera.in/download>.
-3. Запиши образ на флешку через [Rufus](https://rufus.ie) (режим DD) или balenaEtcher.
-4. Перезагрузи ПК с флешки (F12 / Boot Menu), Secure Boot лучше отключить.
-5. В меню запусти `palera1n`, выбери **rootless**, подключи iPhone кабелем
-   и следуй подсказкам (телефон нужно будет перевести в DFU).
-6. После джейлбрейка на телефоне появятся **Sileo** и **ElleKit**.
-
-> ⚠️ Сайты вида «jailbreak online без компьютера» — мошенничество, ничего не скачивай оттуда.
-> Официальные адреса: <https://palera.in> и <https://github.com/palera1n/palera1n>.
+Пакет: `com.angelss.customgestures` · архитектура `iphoneos-arm64` · iOS 15.0+
 
 ---
 
-## 1. Что лежит в проекте
+## Что делает
 
-| Файл | Назначение |
+| Жест | Действие |
 |---|---|
-| `Tweak.x` | код твика (Logos). **Тут ты и будешь писать** |
-| `Makefile` | настройки сборки: arm64, iOS 15.0+, rootless |
-| `control` | описание пакета для Sileo (имя, версия, зависимости) |
-| `.github/workflows/build.yml` | сборка `.deb` на серверах GitHub |
+| Свайп снизу вверх | Домой |
+| Свайп снизу вверх + задержка | Многозадачность |
+| Свайп по нижнему краю влево/вправо | Переключение между приложениями |
+| Свайп сверху справа | Пункт управления |
+| Кнопка Home | Продолжает работать как раньше |
 
-Сейчас в `Tweak.x` стоит демо-хук: через 3 секунды после запуска SpringBoard
-появляется окно «Твик загружен ✅». Это проверка, что вся цепочка работает.
+Плюс настройки в **Настройки → CustomGestures**: включение, показ полоски,
+высота/ширина полоски, свайп Пункта управления, фикс анимации, кнопка respring.
 
 ---
 
-## 2. Аккаунт GitHub и загрузка проекта
+## Почему это плавнее аналогов
 
-1. Зарегистрируйся на <https://github.com> (бесплатно).
-2. Установи [GitHub Desktop](https://desktop.github.com) — с ним не нужен терминал.
-3. В GitHub Desktop: **File → Add local repository** → выбери папку `project`.
-   Он предложит создать репозиторий — согласись.
-4. Нажми **Publish repository**. Имя — например `ios-tweak`.
-   Публичный репозиторий = безлимитные минуты сборки, приватный = 2000 минут/мес
-   (одна сборка занимает ~4 минуты, так что хватает с запасом).
+1. **Никаких сторонних `UIGestureRecognizer`.** Твик только включает уже
+   существующий в SpringBoard движок `SBHomeGestureSettings` /
+   `SBFHomeGrabberSettings`, который Apple использует на iPhone X+. Все
+   анимации, интерполяции и отклик — системные.
+2. **Нулевое вмешательство по умолчанию.** Размеры полоски переопределяются
+   только если пользователь реально сдвинул слайдер (0 = системное значение),
+   поэтому «растягивание» полоски при свайпе не ломается.
+3. **Хуки только на геттеры/сеттеры настроек**, а не на покадровые методы
+   (`layoutSubviews`, анимационные батчи). Нет работы в hot path кадров.
+4. **Настройки кэшируются** в статические переменные и перечитываются только
+   по Darwin-уведомлению, а не при каждом вызове хука.
 
-Альтернатива через терминал (git уже установлен):
+---
+
+## Джейлбрейк
+
+### Dopamine 3 (рекомендуется)
+
+Dopamine 3.0+ поддерживает **A8–A13 на iOS 15.0–18.7.1 и 26.0–26.0.1**,
+работает только в rootless-режиме — как раз наш случай. Ставится через
+[TrollStore](https://ios.cfw.guide/installing-dopamine-trollstore) или
+[без него](https://ios.cfw.guide/installing-dopamine), официальный сайт:
+<https://ellekit.space/dopamine/>.
+
+Если приложение скажет, что 15.8.8 не поддерживается — используй **palera1n**
+(эксплойт checkm8, A8–A11, iOS 15.0+). На Windows palera1n запускается
+с загрузочной флешки [Palen1x](https://palera.in/download).
+
+> ⚠️ Сайты «jailbreak online без компьютера» — мошенничество.
+
+Для установки `.deb` понадобится **Sileo** (идёт с джейлбрейком) и желательно
+**Filza**. Твик использует **ElleKit** — он уже установлен джейлбрейком.
+
+---
+
+## Сборка `.deb`
+
+Сборка идёт в GitHub Actions, локально ничего ставить не нужно.
+
+1. Создай аккаунт на <https://github.com> и репозиторий (можно приватный).
+2. Залей папку `project` — проще всего через [GitHub Desktop](https://desktop.github.com):
+   *File → Add local repository → Publish repository*.
+3. В репозитории: **Actions → Build tweak → Run workflow**.
+4. Через ~5 минут скачай артефакт **CustomGestures-deb** (zip) и распакуй `.deb`.
+
+Через терминал (git уже установлен):
 
 ```powershell
 cd "C:\Users\angelss\Documents\Default Project\ios-tweak\project"
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/ТВОЙ_ЛОГИН/ios-tweak.git
+git remote add origin https://github.com/ТВОЙ_ЛОГИН/customgestures.git
 git push -u origin main
 ```
 
 ---
 
-## 3. Сборка `.deb`
+## Установка на iPhone
 
-1. Открой репозиторий на github.com → вкладка **Actions**.
-2. Слева выбери **Build tweak** → кнопка **Run workflow** → **Run workflow**.
-3. Через ~4–5 минут открой завершившийся запуск.
-4. Внизу, в разделе **Artifacts**, скачай **MyTweak-deb** (это zip).
-5. Распакуй — внутри файл вида `com.angelss.mytweak_0.0.1_iphoneos-arm64.deb`.
+1. Перекинь `.deb` на телефон (iCloud Drive, Telegram «Избранное», почта, кабель).
+2. Открой в **Filza** → тап по файлу → **Install** (или «Открыть в Sileo»).
+3. Respring: из Sileo либо кнопкой в настройках твика.
+4. Проверь: свайп снизу вверх должен уводить на домашний экран,
+   снизу справа/слева — переключать приложения, сверху справа — Пункт управления.
 
-Сборка также запускается автоматически при каждом `push` в `main`.
-
----
-
-## 4. Установка на iPhone
-
-1. Перекинь `.deb` на телефон любым способом: iCloud Drive, Telegram («Избранное»),
-   почта или кабелем через приложение-файловый менеджер.
-2. На телефоне открой `.deb`:
-   - **Filza** (поставь из Sileo) → тап по файлу → **Install**;
-   - либо поделись файлом → **Open in Sileo**.
-3. Дождись установки и сделай **Respring** (Sileo предложит «Restart SpringBoard»).
-4. Через ~3 секунды должен появиться алерт **«Твик загружен ✅»**.
-
-Куда ставится твик (rootless):
+Файлы на устройстве (rootless):
 
 ```
-/var/jb/Library/TweakInject/MyTweak.dylib
-/var/jb/Library/TweakInject/MyTweak.plist
-```
-
-Проверить через SSH/NewTerm:
-
-```sh
-ls -l /var/jb/Library/TweakInject/
-dpkg -l | grep mytweak
+/var/jb/Library/TweakInject/CustomGestures.dylib
+/var/jb/Library/TweakInject/CustomGestures.plist
+/var/jb/Library/PreferenceBundles/CustomGesturesPrefs.bundle/
+/var/jb/Library/PreferenceLoader/Preferences/CustomGestures.plist
+/var/jb/var/mobile/Library/Preferences/com.angelss.customgestures.plist
 ```
 
 ---
 
-## 5. Как писать код
+## Если что-то не так
 
-`Tweak.x` использует Logos — надстройку над Objective-C:
-
-```objc
-%hook ИмяКласса
-- (void)метод {
-    %orig;              // вызвать оригинальную реализацию
-    // ... твой код ...
-}
-%end
-```
-
-Полезное:
-
-- `%hookf(...)` — хук C-функций;
-- `%new` — добавить новый метод;
-- `%c(Класс)` — превратить имя класса в `Class`;
-- `%group` / `%init` — несколько групп хуков.
-
-Цикл работы: правишь `Tweak.x` → commit + push → Actions собирает новый `.deb`
-→ ставишь поверх старого (версию в `control` лучше поднимать).
-
-Локальная копия Theos и SDK лежит в `../toolchain` — нужна только для чтения
-заголовков и проверки API. Собирать на Windows нельзя (Theos не поддерживает
-Windows напрямую), для этого и используется GitHub Actions.
-
----
-
-## 6. Если что-то пошло не так
-
-| Симптом | Что делать |
+| Симптом | Решение |
 |---|---|
-| Actions упал на `Install Theos` | Перезапусти workflow: GitHub иногда не может достучаться до github.com |
-| `Unable to locate SDK` | Проверь шаг `Add iOS 15.6 SDK` в логе |
-| Sileo пишет `Depends: firmware (>= 15.0)` | Телефон не на iOS 15 или джейлбрейк не rootless |
-| `.deb` ставится, но твика нет | Не установлен **ElleKit** (`dpkg -l \| grep ellekit`), либо процесс не перезапущен |
-| SpringBoard уходит в цикл перезагрузок | Загрузись в safe mode / без твиков, удали пакет: `dpkg -r com.angelss.mytweak` |
-| Алерт не появился | Смотри `/var/jb/Library/TweakInject/MyTweak.plist` — там указан `Filter` (SpringBoard) |
+| Жесты не появились | Проверь, что твик загружен: `ls /var/jb/Library/TweakInject/`, затем respring |
+| Полоска есть, свайпы не работают | Другой билд SpringBoard: пришли лог `log stream --predicate 'process == "SpringBoard"'`, подберём имена методов |
+| Пункт управления открывается снизу | Включи «Свайп сверху справа» и сделай respring |
+| Анимация Пункта управления дёргается | Переключи «Чинить анимацию Пункта управления» |
+| SpringBoard в цикле | Загрузись без твиков / в safe mode, удали: `dpkg -r com.angelss.customgestures` |
+| Настройки не появились | Не установлен PreferenceLoader — переустанови Sileo-пакет `preferenceloader` |
+| Actions упал | Перезапусти workflow, затем пришли лог упавшего шага |
 
-Логи твика (через NewTerm или SSH):
+Логи:
 
 ```sh
 log stream --predicate 'process == "SpringBoard"' --level debug
@@ -155,10 +120,25 @@ log stream --predicate 'process == "SpringBoard"' --level debug
 
 ---
 
-## 7. Настройки пакета
+## Структура проекта
 
-- Bundle ID: `com.angelss.mytweak`
-- Версия: `0.0.1`
-- Архитектура: `iphoneos-arm64` (rootless)
-- Минимальная iOS: 15.0
-- Цель сборки: SDK 15.6, deployment target 15.0, arm64
+```
+Tweak.x                      — хуки SpringBoard
+Makefile                     — arm64, iOS 15.0+, rootless
+control                      — метаданные пакета
+prefs/                       — бандл настроек (PSListController)
+layout/                      — Root.plist, Info.plist, запись в PreferenceLoader
+.github/workflows/build.yml  — сборка .deb
+```
+
+Локальная копия Theos и SDK 15.6 лежит в `../toolchain` — для чтения заголовков.
+Собирать на Windows нельзя: Theos требует Linux/WSL/macOS, поэтому и используется CI.
+
+---
+
+## Дальше
+
+- Тонкая настройка порогов жестов (скорость/дистанция) — нужны точные имена
+  методов из SpringBoard твоей прошивки, подберём по логам.
+- Настройка цвета/прозрачности полоски.
+- Отдельные переключатели для «свайп вверх + задержка» и горизонтальных свайпов.

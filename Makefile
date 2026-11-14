@@ -1,5 +1,5 @@
-# iPhone 7 / iOS 15.8.8 — rootless tweak
-# Схема rootless: всё ставится в /var/jb (Dopamine / palera1n rootless / ElleKit)
+# CustomGestures — rootless tweak for iPhone 7 / iOS 15.x
+# Жесты iPhone X + настройки внешнего вида
 
 export ARCHS = arm64
 export TARGET = iphone:clang:15.6:15.0
@@ -8,10 +8,12 @@ export INSTALL_TARGET_PROCESSES = SpringBoard
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = MyTweak
-MyTweak_FILES = Tweak.x
-MyTweak_CFLAGS = -fobjc-arc -Wall
-MyTweak_FRAMEWORKS = UIKit
+TWEAK_NAME = CustomGestures
+CustomGestures_FILES = Tweak.x
+CustomGestures_CFLAGS = -fobjc-arc -Wall
+CustomGestures_FRAMEWORKS = UIKit
+
+SUBPROJECTS += prefs
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 

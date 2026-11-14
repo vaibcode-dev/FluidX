@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>title</key>
+	<string>CustomGestures</string>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Жесты iPhone X</string>
+			<key>footerText</key>
+			<string>Используется родной движок жестов SpringBoard, поэтому анимации плавные и не нагружают систему.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>label</key>
+			<string>Включить жесты</string>
+			<key>defaults</key>
+			<string>com.angelss.customgestures</string>
+			<key>key</key>
+			<string>enabled</string>
+			<key>default</key>
+			<true/>
+			<key>PostNotification</key>
+			<string>com.angelss.customgestures/ReloadPrefs</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>label</key>
+			<string>Показывать домашнюю полоску</string>
+			<key>defaults</key>
+			<string>com.angelss.customgestures</string>
+			<key>key</key>
+			<string>showHomeBar</string>
+			<key>default</key>
+			<true/>
+			<key>PostNotification</key>
+			<string>com.angelss.customgestures/ReloadPrefs</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Размер полоски</string>
+			<key>footerText</key>
+			<string>0 — системный размер. Значения применяются после respring.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>label</key>
+			<string>Высота</string>
+			<key>defaults</key>
+			<string>com.angelss.customgestures</string>
+			<key>key</key>
+			<string>homeBarHeight</string>
+			<key>default</key>
+			<real>0</real>
+			<key>minValue</key>
+			<real>0</real>
+			<key>maxValue</key>
+			<real>12</real>
+			<key>showValue</key>
+			<true/>
+			<key>PostNotification</key>
+			<string>com.angelss.customgestures/ReloadPrefs</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>label</key>
+			<string>Ширина</string>
+			<key>defaults</key>
+			<string>com.angelss.customgestures</string>
+			<key>key</key>
+			<string>homeBarWidth</string>
+			<key>default</key>
+			<real>0</real>
+			<key>minValue</key>
+			<real>0</real>
+			<key>maxValue</key>
+			<real>220</real>
+			<key>showValue</key>
+			<true/>
+			<key>PostNotification</key>
+			<string>com.angelss.customgestures/ReloadPrefs</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Пункт управления</string>
+			<key>footerText</key>
+			<string>При включённых жестах свайп снизу забирает «Домой», поэтому Пункт управления переносится на свайп сверху справа.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>label</key>
+			<string>Свайп сверху справа</string>
+			<key>defaults</key>
+			<string>com.angelss.customgestures</string>
+			<key>key</key>
+			<string>ccEdgeFix</string>
+			<key>default</key>
+			<true/>
+			<key>PostNotification</key>
+			<string>com.angelss.customgestures/ReloadPrefs</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>label</key>
+			<string>Чинить анимацию Пункта управления</string>
+			<key>defaults</key>
+			<string>com.angelss.customgestures</string>
+			<key>key</key>
+			<string>ccAnimFix</string>
+			<key>default</key>
+			<true/>
+			<key>PostNotification</key>
+			<string>com.angelss.customgestures/ReloadPrefs</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Применение</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Respring</string>
+			<key>action</key>
+			<string>respring</string>
+		</dict>
+	</array>
+</dict>
+</plist>
