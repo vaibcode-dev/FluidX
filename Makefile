@@ -11,6 +11,7 @@ include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = MyTweak
 MyTweak_FILES = Tweak.x
 MyTweak_CFLAGS = -fobjc-arc -Wall
+MyTweak_FRAMEWORKS = UIKit
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
