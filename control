@@ -1,0 +1,9 @@
+Package: com.angelss.mytweak
+Name: MyTweak
+Version: 0.0.1
+Architecture: iphoneos-arm64
+Description: Мой первый rootless-твик для iPhone 7 / iOS 15
+Maintainer: angelss
+Author: angelss
+Section: Tweaks
+Depends: firmware (>= 15.0)

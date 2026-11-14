@@ -1,0 +1,43 @@
+name: Build tweak
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Theos
+        env:
+          CI: "1"
+        run: |
+          export THEOS="$HOME/theos"
+          export CI=1
+          sudo apt-get update
+          sudo apt-get install -y build-essential fakeroot rsync curl perl zip git libxml2 libtinfo6 ldid || true
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+          echo "THEOS=$THEOS" >> "$GITHUB_ENV"
+          echo "$THEOS/bin" >> "$GITHUB_PATH"
+
+      - name: Add iOS 15.6 SDK
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git /tmp/sdks
+          git -C /tmp/sdks sparse-checkout set iPhoneOS15.6.sdk
+          mkdir -p "$THEOS/sdks"
+          cp -r /tmp/sdks/iPhoneOS15.6.sdk "$THEOS/sdks/"
+
+      - name: Build .deb
+        run: make package FINALPACKAGE=1
+
+      - name: Upload .deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyTweak-deb
+          path: packages/*.deb
+          if-no-files-found: error
