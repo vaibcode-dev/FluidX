@@ -104,6 +104,60 @@ git push -u origin main
 
 ---
 
+## Как всё проверять
+
+### 1. Аккаунт GitHub
+
+Открой `https://github.com/ТВОЙ_ЛОГИН` — профиль должен открываться, логин видно
+в адресе и в правом верхнем углу. Если страница 404 — аккаунт ещё не создан.
+
+### 2. Локальный репозиторий
+
+```powershell
+cd "C:\Users\angelss\Documents\Default Project\ios-tweak\project"
+powershell -ExecutionPolicy Bypass -File tools\check-repo.ps1
+```
+
+Скрипт покажет ветку, последние коммиты, привязан ли `origin`, есть ли
+незакоммиченные изменения и все ли обязательные файлы на месте.
+
+### 3. Репозиторий на GitHub
+
+`https://github.com/ТВОЙ_ЛОГИН/FluidX` — в списке файлов должны быть `Tweak.x`,
+`Makefile`, `control` и папка `.github/workflows`. Хэш последнего коммита на сайте
+должен совпадать с локальным (`git log --oneline -1`).
+
+### 4. Сборка
+
+Вкладка **Actions** → слева **Build tweak** → запуск с зелёной галочкой.
+Шаги внутри запуска: `Checkout`, `Install Theos`, `Add iOS 15.6 SDK`, `Build .deb`,
+`Upload .deb`. Красный крестик = открой лог упавшего шага.
+
+### 5. Артефакт
+
+Внизу страницы запуска — **Artifacts → FluidX-deb**. Внутри zip лежит
+`com.dolboebvaibcode.fluidx_0.1.0_iphoneos-arm64.deb`.
+
+Проверка файла до установки:
+
+```powershell
+python tools\inspect_deb.py "путь\к\com.dolboebvaibcode.fluidx_0.1.0_iphoneos-arm64.deb"
+```
+
+Скрипт покажет package id, архитектуру, пути `/var/jb`, тип Mach-O и фильтр
+SpringBoard. Если пишет «всё в порядке» — пакет собран правильно.
+
+### 6. Телефон
+
+```sh
+dpkg -l | grep fluidx                  # пакет установлен
+ls -l /var/jb/Library/TweakInject/     # FluidX.dylib + FluidX.plist
+```
+
+В Настройках должен появиться пункт **FluidX**.
+
+---
+
 ## Если что-то не так
 
 | Симптом | Решение |
