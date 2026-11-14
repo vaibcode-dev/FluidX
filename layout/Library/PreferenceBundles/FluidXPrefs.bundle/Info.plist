@@ -5,13 +5,13 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
-	<string>CustomGesturesPrefs</string>
+	<string>FluidXPrefs</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.angelss.customgestures.prefs</string>
+	<string>com.dolboebvaibcode.fluidx.prefs</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>CustomGesturesPrefs</string>
+	<string>FluidXPrefs</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>

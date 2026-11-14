@@ -1,4 +1,4 @@
-# CustomGestures — rootless tweak for iPhone 7 / iOS 15.x
+# FluidX — rootless tweak for iPhone 7 / iOS 15.x
 # Жесты iPhone X + настройки внешнего вида
 
 export ARCHS = arm64
@@ -8,10 +8,10 @@ export INSTALL_TARGET_PROCESSES = SpringBoard
 
 include $(THEOS)/makefiles/common.mk
 
-TWEAK_NAME = CustomGestures
-CustomGestures_FILES = Tweak.x
-CustomGestures_CFLAGS = -fobjc-arc -Wall
-CustomGestures_FRAMEWORKS = UIKit
+TWEAK_NAME = FluidX
+FluidX_FILES = Tweak.x
+FluidX_CFLAGS = -fobjc-arc -Wall
+FluidX_FRAMEWORKS = UIKit
 
 SUBPROJECTS += prefs
 

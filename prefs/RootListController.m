@@ -15,7 +15,7 @@ static void SpawnCommand(const char *path, const char *arg1, const char *arg2) {
 	posix_spawn(&pid, path, NULL, NULL, (char *const *)argv, environ);
 }
 
-@implementation CustomGesturesRootListController
+@implementation FluidXRootListController
 
 - (NSArray *)specifiers {
 	if (!_specifiers) {

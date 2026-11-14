@@ -5,13 +5,13 @@
 	<key>entry</key>
 	<dict>
 		<key>bundle</key>
-		<string>CustomGesturesPrefs</string>
+		<string>FluidXPrefs</string>
 		<key>cell</key>
 		<string>PSLinkCell</string>
 		<key>detail</key>
-		<string>CustomGesturesRootListController</string>
+		<string>FluidXRootListController</string>
 		<key>label</key>
-		<string>CustomGestures</string>
+		<string>FluidX</string>
 	</dict>
 </dict>
 </plist>

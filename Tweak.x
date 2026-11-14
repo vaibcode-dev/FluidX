@@ -1,4 +1,4 @@
-// CustomGestures — жесты iPhone X для iPhone 7 (iOS 15.x, rootless)
+// FluidX — жесты iPhone X для iPhone 7 (iOS 15.x, rootless)
 //
 // Идея: не рисовать свои распознаватели (они дают рывки и конфликты),
 // а включить встроенный движок жестов SpringBoard и аккуратно
@@ -6,8 +6,8 @@
 
 #import <UIKit/UIKit.h>
 
-#define PREFS_DOMAIN @"com.angelss.customgestures"
-#define RELOAD_NOTIFICATION "com.angelss.customgestures/ReloadPrefs"
+#define PREFS_DOMAIN @"com.dolboebvaibcode.fluidx"
+#define RELOAD_NOTIFICATION "com.dolboebvaibcode.fluidx/ReloadPrefs"
 
 static BOOL gEnabled = YES;
 static BOOL gShowHomeBar = YES;

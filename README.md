@@ -1,10 +1,10 @@
-# CustomGestures
+# FluidX
 
 Жесты iPhone X для iPhone 7 на iOS 15.x (rootless). Аналог GesturesXV, но:
 родной движок жестов SpringBoard вместо самописных распознавателей,
 настройки внешнего вида полоски и починка анимации Пункта управления.
 
-Пакет: `com.angelss.customgestures` · архитектура `iphoneos-arm64` · iOS 15.0+
+Пакет: `com.dolboebvaibcode.fluidx` · архитектура `iphoneos-arm64` · iOS 15.0+
 
 ---
 
@@ -18,7 +18,7 @@
 | Свайп сверху справа | Пункт управления |
 | Кнопка Home | Продолжает работать как раньше |
 
-Плюс настройки в **Настройки → CustomGestures**: включение, показ полоски,
+Плюс настройки в **Настройки → FluidX**: включение, показ полоски,
 высота/ширина полоски, свайп Пункта управления, фикс анимации, кнопка respring.
 
 ---
@@ -36,6 +36,10 @@
    (`layoutSubviews`, анимационные батчи). Нет работы в hot path кадров.
 4. **Настройки кэшируются** в статические переменные и перечитываются только
    по Darwin-уведомлению, а не при каждом вызове хука.
+
+Для сравнения: GesturesXV подменяет «железо» (`BSPlatform homeButtonType`,
+`MGCopyAnswer`) и потом вручную чинит клавиатуру, Reachability, кнопки на
+локскрине и CC — отсюда кривые анимации и «квадратная» полоска. FluidX так не делает.
 
 ---
 
@@ -68,13 +72,13 @@ Dopamine 3.0+ поддерживает **A8–A13 на iOS 15.0–18.7.1 и 26.0
 2. Залей папку `project` — проще всего через [GitHub Desktop](https://desktop.github.com):
    *File → Add local repository → Publish repository*.
 3. В репозитории: **Actions → Build tweak → Run workflow**.
-4. Через ~5 минут скачай артефакт **CustomGestures-deb** (zip) и распакуй `.deb`.
+4. Через ~5 минут скачай артефакт **FluidX-deb** (zip) и распакуй `.deb`.
 
 Через терминал (git уже установлен):
 
 ```powershell
 cd "C:\Users\angelss\Documents\Default Project\ios-tweak\project"
-git remote add origin https://github.com/ТВОЙ_ЛОГИН/customgestures.git
+git remote add origin https://github.com/ТВОЙ_ЛОГИН/FluidX.git
 git push -u origin main
 ```
 
@@ -91,11 +95,11 @@ git push -u origin main
 Файлы на устройстве (rootless):
 
 ```
-/var/jb/Library/TweakInject/CustomGestures.dylib
-/var/jb/Library/TweakInject/CustomGestures.plist
-/var/jb/Library/PreferenceBundles/CustomGesturesPrefs.bundle/
-/var/jb/Library/PreferenceLoader/Preferences/CustomGestures.plist
-/var/jb/var/mobile/Library/Preferences/com.angelss.customgestures.plist
+/var/jb/Library/TweakInject/FluidX.dylib
+/var/jb/Library/TweakInject/FluidX.plist
+/var/jb/Library/PreferenceBundles/FluidXPrefs.bundle/
+/var/jb/Library/PreferenceLoader/Preferences/FluidX.plist
+/var/jb/var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist
 ```
 
 ---
@@ -108,7 +112,7 @@ git push -u origin main
 | Полоска есть, свайпы не работают | Другой билд SpringBoard: пришли лог `log stream --predicate 'process == "SpringBoard"'`, подберём имена методов |
 | Пункт управления открывается снизу | Включи «Свайп сверху справа» и сделай respring |
 | Анимация Пункта управления дёргается | Переключи «Чинить анимацию Пункта управления» |
-| SpringBoard в цикле | Загрузись без твиков / в safe mode, удали: `dpkg -r com.angelss.customgestures` |
+| SpringBoard в цикле | Загрузись без твиков / в safe mode, удали: `dpkg -r com.dolboebvaibcode.fluidx` |
 | Настройки не появились | Не установлен PreferenceLoader — переустанови Sileo-пакет `preferenceloader` |
 | Actions упал | Перезапусти workflow, затем пришли лог упавшего шага |
 

@@ -1,4 +1,4 @@
 #import <Preferences/PSListController.h>
 
-@interface CustomGesturesRootListController : PSListController
+@interface FluidXRootListController : PSListController
 @end

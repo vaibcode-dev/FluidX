@@ -1,5 +1,5 @@
-Package: com.angelss.customgestures
-Name: CustomGestures
+Package: com.dolboebvaibcode.fluidx
+Name: FluidX
 Version: 0.1.0
 Architecture: iphoneos-arm64
 Description: Жесты iPhone X для устройств с кнопкой Home (iOS 15, rootless)
