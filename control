@@ -9,4 +9,4 @@ Description: Жесты iPhone X для устройств с кнопкой Hom
 Maintainer: angelss
 Author: angelss
 Section: Tweaks
-Depends: firmware (>= 15.0)
+Depends: firmware (>= 15.0), mobilesubstrate | ellekit

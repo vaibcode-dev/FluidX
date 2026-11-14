@@ -53,6 +53,15 @@ jobs:
           path: packages/*.deb
           if-no-files-found: error
 
+      # Кладём .deb в публичную ветку: прямая ссылка без входа в GitHub.
+      - name: Publish .deb
+        if: success()
+        run: |
+          set -eu
+          mkdir -p ci-logs
+          cp packages/*.deb ci-logs/
+          ls -l ci-logs/*.deb
+
       # Публикуем лог в ветку ci-logs: так причину падения видно без входа в GitHub.
       # raw.githubusercontent.com/vaibcode-dev/FluidX/ci-logs/build.log
       - name: Publish build log
