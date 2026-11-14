@@ -7,11 +7,16 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # НЕ ubuntu-latest: с октября 2026 он мигрировал на Ubuntu 26,
+    # где у установщика Theos ломаются зависимости (exit code 3).
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Show runner
+        run: cat /etc/os-release
 
       - name: Install Theos
         env:
@@ -19,21 +24,23 @@ jobs:
         run: |
           export THEOS="$HOME/theos"
           export CI=1
-          sudo apt-get update
-          sudo apt-get install -y build-essential fakeroot rsync curl perl zip git libxml2 libtinfo6 ldid || true
-          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+          {
+            sudo apt-get update
+            sudo apt-get install -y build-essential fakeroot rsync curl perl zip git libxml2 libtinfo6 ldid || true
+            bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+          } 2>&1 | tee theos.log
           echo "THEOS=$THEOS" >> "$GITHUB_ENV"
           echo "$THEOS/bin" >> "$GITHUB_PATH"
 
       - name: Add iOS 15.6 SDK
         run: |
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git /tmp/sdks
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git /tmp/sdks 2>&1 | tee -a theos.log
           git -C /tmp/sdks sparse-checkout set iPhoneOS15.6.sdk
           mkdir -p "$THEOS/sdks"
           cp -r /tmp/sdks/iPhoneOS15.6.sdk "$THEOS/sdks/"
 
       - name: Build .deb
-        run: make package FINALPACKAGE=1
+        run: make package FINALPACKAGE=1 2>&1 | tee build.log
 
       - name: Upload .deb
         uses: actions/upload-artifact@v4
@@ -41,3 +48,19 @@ jobs:
           name: FluidX-deb
           path: packages/*.deb
           if-no-files-found: error
+
+      # Если что-то упало — пишем хвост логов в Summary запуска,
+      # чтобы причину было видно прямо на странице без доступа к логам.
+      - name: Failure report
+        if: failure()
+        run: |
+          for file in theos.log build.log; do
+            if [ -f "$file" ]; then
+              {
+                echo "### \`$file\` (last 60 lines)"
+                echo '```'
+                tail -n 60 "$file"
+                echo '```'
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
