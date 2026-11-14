@@ -3,6 +3,9 @@ Name: FluidX
 Version: 0.1.0
 Architecture: iphoneos-arm64
 Description: Жесты iPhone X для устройств с кнопкой Home (iOS 15, rootless)
+ Твик написан нейросетью (ИИ) в учебных целях. Автор не несёт никакой
+ ответственности за ваш iPhone и за последствия установки: зависания,
+ потерю данных, необходимость перепрошивки. Всё на ваш страх и риск.
 Maintainer: angelss
 Author: angelss
 Section: Tweaks

@@ -143,6 +143,15 @@
 			<key>action</key>
 			<string>respring</string>
 		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Дисклеймер</string>
+			<key>footerText</key>
+			<string>Твик написан нейросетью (ИИ) в учебных целях. Автор не несёт никакой ответственности за ваш iPhone и за последствия установки: зависания, циклический respring, потерю данных, необходимость перепрошивки. Всё, что вы делаете, — на ваш страх и риск.</string>
+		</dict>
 	</array>
 </dict>
 </plist>

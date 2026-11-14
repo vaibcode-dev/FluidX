@@ -5,6 +5,10 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+# Нужно, чтобы CI мог закоммитить лог сборки в ветку ci-logs
+permissions:
+  contents: write
+
 jobs:
   build:
     # НЕ ubuntu-latest: с октября 2026 он мигрировал на Ubuntu 26,
@@ -16,31 +20,31 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Show runner
-        run: cat /etc/os-release
+        run: |
+          cat /etc/os-release
+          uname -a
 
+      # Готовый установщик Theos: ставит зависимости, Linux-тулчейн и все SDK.
+      # Сам обходит проблемы Ubuntu 26 (libxml2-16, binutils-gold).
       - name: Install Theos
-        env:
-          CI: "1"
-        run: |
-          export THEOS="$HOME/theos"
-          export CI=1
-          {
-            sudo apt-get update
-            sudo apt-get install -y build-essential fakeroot rsync curl perl zip git libxml2 libtinfo6 ldid || true
-            bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
-          } 2>&1 | tee theos.log
-          echo "THEOS=$THEOS" >> "$GITHUB_ENV"
-          echo "$THEOS/bin" >> "$GITHUB_PATH"
+        uses: Randomblock1/theos-action@v1.6
+        with:
+          theos-dir: ${{ github.workspace }}/theos
 
-      - name: Add iOS 15.6 SDK
+      - name: Verify Theos
         run: |
-          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git /tmp/sdks 2>&1 | tee -a theos.log
-          git -C /tmp/sdks sparse-checkout set iPhoneOS15.6.sdk
-          mkdir -p "$THEOS/sdks"
-          cp -r /tmp/sdks/iPhoneOS15.6.sdk "$THEOS/sdks/"
+          set -euo pipefail
+          echo "THEOS=${THEOS}"
+          test -f "${THEOS}/makefiles/common.mk" || { echo "::error::Theos не установился: нет makefiles/common.mk"; exit 1; }
+          test -d "${THEOS}/sdks/iPhoneOS15.6.sdk" || { echo "::error::Нет SDK iPhoneOS15.6"; ls "${THEOS}/sdks"; exit 1; }
+          ls "${THEOS}/toolchain"/*/iphone/bin/clang* 2>/dev/null || true
+          echo "--- clang ---"
+          "${THEOS}/toolchain/linux/iphone/bin/clang" --version || true
 
       - name: Build .deb
-        run: make package FINALPACKAGE=1 2>&1 | tee build.log
+        run: |
+          set -o pipefail   # без этого ошибка make терялась в pipe на tee
+          make package FINALPACKAGE=1 2>&1 | tee build.log
 
       - name: Upload .deb
         uses: actions/upload-artifact@v4
@@ -49,18 +53,28 @@ jobs:
           path: packages/*.deb
           if-no-files-found: error
 
-      # Если что-то упало — пишем хвост логов в Summary запуска,
-      # чтобы причину было видно прямо на странице без доступа к логам.
-      - name: Failure report
-        if: failure()
+      # Публикуем лог в ветку ci-logs: так причину падения видно без входа в GitHub.
+      # raw.githubusercontent.com/vaibcode-dev/FluidX/ci-logs/build.log
+      - name: Publish build log
+        if: always()
         run: |
-          for file in theos.log build.log; do
-            if [ -f "$file" ]; then
-              {
-                echo "### \`$file\` (last 60 lines)"
-                echo '```'
-                tail -n 60 "$file"
-                echo '```'
-              } >> "$GITHUB_STEP_SUMMARY"
-            fi
-          done
+          set -u
+          mkdir -p ci-logs
+          if [ -f build.log ]; then cp build.log ci-logs/build.log; fi
+          {
+            echo "run: ${{ github.run_number }}"
+            echo "sha: ${{ github.sha }}"
+            echo "status: ${{ job.status }}"
+            echo "date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo
+            echo "--- theos/makefiles/common.mk: $([ -f "${THEOS}/makefiles/common.mk" ] && echo ok || echo MISSING)"
+            echo "--- sdks:"
+            ls "${THEOS}/sdks" 2>/dev/null || echo "(нет каталога)"
+            echo "--- packages:"
+            ls -l packages 2>/dev/null || echo "(нет каталога)"
+          } > ci-logs/status.txt
+          git config user.name "FluidX CI"
+          git config user.email "ci@users.noreply.github.com"
+          git add -f ci-logs
+          git commit -m "CI log: run ${{ github.run_number }} (${{ job.status }})" || exit 0
+          git push --force origin HEAD:refs/heads/ci-logs
