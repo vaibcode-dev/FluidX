@@ -115,7 +115,7 @@ git push -u origin main
 **Готовая сборка (без GitHub-аккаунта):**
 
 ```
-https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.2.0-beta_iphoneos-arm64.deb
+https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.2.1-beta_iphoneos-arm64.deb
 ```
 
 Страница релиза (там же `.deb` прикреплён файлом):
@@ -124,7 +124,7 @@ https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.
 Открой ссылку в Safari на iPhone → «Скачать» → в Filza открой файл → **Install**.
 (Ветка `ci-logs` — публичная, там же лежит `build.log` последней сборки.)
 
-> Текущая версия — **0.2.0-beta**: помечена как pre-release, потому что твик
+> Текущая версия — **0.2.1-beta**: помечена как pre-release, потому что твик
 > ещё не проверен на живом устройстве.
 
 Либо вручную:
@@ -142,8 +142,25 @@ https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.
 /var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX.plist
 /var/jb/Library/PreferenceBundles/FluidXPrefs.bundle/
 /var/jb/Library/PreferenceLoader/Preferences/FluidX.plist
-/var/jb/var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist
+/var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist
 ```
+
+### Если раздела «FluidX» нет в Настройках
+
+Раздел в Настройках показывает **PreferenceLoader**, а не сам твик. Проверь по порядку:
+
+1. **Sileo → Установленные** → в поиске набери `preference`. Должен быть пакет
+   **PreferenceLoader**. Если его нет — раздел не появится ни у одного твика;
+   поставь его из репозитория своего бутстрапа (Havoc / ellekit).
+2. После установки `.deb` **принудительно закрой Настройки** (смахни из свитчера)
+   и открой заново — список разделов читается при запуске приложения.
+3. Открой в Filza файл `/var/mobile/FluidX-diag.txt` — его пишет наш `postinst`
+   при установке. Там видно, установлен ли PreferenceLoader и на месте ли файлы.
+   Пришли его содержимое в Telegram, если раздел всё равно не появился.
+4. Проверь, что установлена именно свежая версия: в Sileo у FluidX должно быть
+   `0.2.1-beta`. Установка старого `.deb` поверх нового — это **понижение**
+   версии (в логе Sileo будет `downgrading`), и файлы настроек в старой сборке
+   могут быть другими.
 
 ---
 
@@ -179,12 +196,12 @@ powershell -ExecutionPolicy Bypass -File tools\check-repo.ps1
 ### 5. Артефакт
 
 Внизу страницы запуска — **Artifacts → FluidX-deb**. Внутри zip лежит
-`com.dolboebvaibcode.fluidx_0.2.0-beta_iphoneos-arm64.deb`.
+`com.dolboebvaibcode.fluidx_0.2.1-beta_iphoneos-arm64.deb`.
 
 Проверка файла до установки:
 
 ```powershell
-python tools\inspect_deb.py "путь\к\com.dolboebvaibcode.fluidx_0.2.0-beta_iphoneos-arm64.deb"
+python tools\inspect_deb.py "путь\к\com.dolboebvaibcode.fluidx_0.2.1-beta_iphoneos-arm64.deb"
 ```
 
 Скрипт покажет package id, архитектуру, пути `/var/jb`, тип Mach-O и фильтр
