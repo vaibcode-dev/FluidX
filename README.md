@@ -103,6 +103,17 @@ git push -u origin main
 
 ## Установка на iPhone
 
+**Готовая сборка (без GitHub-аккаунта):**
+
+```
+https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.1.0_iphoneos-arm64.deb
+```
+
+Открой ссылку в Safari на iPhone → «Скачать» → в Filza открой файл → **Install**.
+(Ветка `ci-logs` — публичная, там же лежит `build.log` последней сборки.)
+
+Либо вручную:
+
 1. Перекинь `.deb` на телефон (iCloud Drive, Telegram «Избранное», почта, кабель).
 2. Открой в **Filza** → тап по файлу → **Install** (или «Открыть в Sileo»).
 3. Respring: из Sileo либо кнопкой в настройках твика.
