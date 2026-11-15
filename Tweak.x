@@ -6,6 +6,14 @@
 
 #import <UIKit/UIKit.h>
 
+// Приватные классы SpringBoard/MaterialKit. Заголовков в SDK нет,
+// поэтому объявляем сами — иначе компилятор не знает их свойств.
+@interface MTLumaDodgePillView : UIView
+@end
+
+@interface SBHomeGrabberView : UIView
+@end
+
 #define PREFS_DOMAIN @"com.dolboebvaibcode.fluidx"
 #define RELOAD_NOTIFICATION "com.dolboebvaibcode.fluidx/ReloadPrefs"
 
