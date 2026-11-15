@@ -31,8 +31,13 @@ if os.name == "nt":
 
 EXPECTED_PACKAGE = "com.dolboebvaibcode.fluidx"
 EXPECTED_ARCH = "iphoneos-arm64"
-EXPECTED_DYLIB = "var/jb/Library/TweakInject/FluidX.dylib"
-EXPECTED_PLIST = "var/jb/Library/TweakInject/FluidX.plist"
+
+# Куда rootless-пакеты кладут твик. Theos по умолчанию использует путь
+# MobileSubstrate (его читает ElleKit на Dopamine), libhooker — TweakInject.
+DYLIB_DIRS = [
+    "var/jb/Library/MobileSubstrate/DynamicLibraries",
+    "var/jb/usr/lib/TweakInject",
+]
 
 CPU_NAMES = {
     0x0100000C: "arm64",
@@ -202,15 +207,24 @@ def main():
         print("      " + name)
 
     print("\n--- Обязательные пути (rootless) ---")
-    check(EXPECTED_DYLIB in files, "есть %s" % EXPECTED_DYLIB)
-    check(EXPECTED_PLIST in files, "есть %s" % EXPECTED_PLIST)
+    dylib_dir = next((d for d in DYLIB_DIRS if (d + "/FluidX.dylib") in files), None)
+    if dylib_dir is None:
+        check(False, "не найден FluidX.dylib ни в одном из путей: %s" % ", ".join(DYLIB_DIRS))
+    else:
+        print("      каталог твика: /%s" % dylib_dir)
+
+    dylib_path = dylib_dir + "/FluidX.dylib" if dylib_dir else None
+    plist_path = dylib_dir + "/FluidX.plist" if dylib_dir else None
+
+    check(dylib_path is not None and dylib_path in files, "есть %s" % (dylib_path or "FluidX.dylib"))
+    check(plist_path is not None and plist_path in files, "есть %s" % (plist_path or "FluidX.plist"))
 
     rootless_ok = all(name.startswith("var/jb/") for name in files if name.startswith(("Library/", "var/", "usr/")))
     check(rootless_ok, "все файлы лежат в /var/jb (схема rootless)")
 
-    if EXPECTED_DYLIB in files:
+    if dylib_path and dylib_path in files:
         print("\n--- Бинарник ---")
-        info = macho_info(files[EXPECTED_DYLIB])
+        info = macho_info(files[dylib_path])
         if info is None:
             check(False, "FluidX.dylib — не Mach-O файл")
         else:
@@ -219,14 +233,14 @@ def main():
             check(info["filetype"] == "MH_DYLIB", "тип: %s" % info["filetype"])
             print("      cpusubtype: 0x%08x" % info["cpusubtype"])
 
-    if EXPECTED_PLIST in files:
+    if plist_path and plist_path in files:
         print("\n--- Фильтр загрузки ---")
         try:
-            plist = plistlib.loads(files[EXPECTED_PLIST])
+            plist = plistlib.loads(files[plist_path])
             bundles = plist.get("Filter", {}).get("Bundles", [])
             check("com.apple.springboard" in bundles, "Filter Bundles: %s" % (bundles or "пусто"))
         except Exception as exc:  # noqa: BLE001
-            check(False, "не удалось прочитать %s: %s" % (EXPECTED_PLIST, exc))
+            check(False, "не удалось прочитать %s: %s" % (plist_path, exc))
 
     print()
     if problems:

@@ -1,3 +1,5 @@
+include $(THEOS)/makefiles/common.mk
+
 BUNDLE_NAME = FluidXPrefs
 
 FluidXPrefs_FILES = RootListController.m

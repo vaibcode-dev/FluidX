@@ -112,8 +112,8 @@ git push -u origin main
 Файлы на устройстве (rootless):
 
 ```
-/var/jb/Library/TweakInject/FluidX.dylib
-/var/jb/Library/TweakInject/FluidX.plist
+/var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX.dylib
+/var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX.plist
 /var/jb/Library/PreferenceBundles/FluidXPrefs.bundle/
 /var/jb/Library/PreferenceLoader/Preferences/FluidX.plist
 /var/jb/var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist
@@ -168,7 +168,7 @@ SpringBoard. Если пишет «всё в порядке» — пакет с�
 
 ```sh
 dpkg -l | grep fluidx                  # пакет установлен
-ls -l /var/jb/Library/TweakInject/     # FluidX.dylib + FluidX.plist
+ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries/   # FluidX.dylib + FluidX.plist
 ```
 
 В Настройках должен появиться пункт **FluidX**.
@@ -179,7 +179,7 @@ ls -l /var/jb/Library/TweakInject/     # FluidX.dylib + FluidX.plist
 
 | Симптом | Решение |
 |---|---|
-| Жесты не появились | Проверь, что твик загружен: `ls /var/jb/Library/TweakInject/`, затем respring |
+| Жесты не появились | Проверь, что твик загружен: `ls /var/jb/Library/MobileSubstrate/DynamicLibraries/`, затем respring |
 | Полоска есть, свайпы не работают | Другой билд SpringBoard: пришли лог `log stream --predicate 'process == "SpringBoard"'`, подберём имена методов |
 | Пункт управления открывается снизу | Включи «Свайп сверху справа» и сделай respring |
 | Анимация Пункта управления дёргается | Переключи «Чинить анимацию Пункта управления» |
