@@ -1,54 +1,59 @@
 #!/bin/sh
-# FluidX — postinst
+# FluidX - postinst (0.3.x)
 #
-# Пишет два отчёта, чтобы можно было понять, почему раздел не виден в Настройках:
-#   /var/mobile/FluidX-diag.txt        — состояние файлов и пакета (этот скрипт);
-#   /var/mobile/FluidX-prefs-diag.txt  — то, что видит сам процесс Настроек
-#                                        (пишет твик FluidXPrefsDiag при запуске).
+# Настройки переехали из Настроек в отдельное приложение FluidX.app,
+# поэтому после установки нужно:
+#   1) убрать старые файлы PreferenceLoader (0.2.x), чтобы пустой раздел
+#      в Настройках больше не висел;
+#   2) зарегистрировать приложение в SpringBoard через uicache;
+#   3) перезапустить Настройки, чтобы они забыли старое пустое меню.
 #
-# И перезапускает Настройки, чтобы список разделов перечитался.
+# Плюс короткий отчёт: /var/mobile/FluidX-install.txt
 
-LOG=/var/mobile/FluidX-diag.txt
-DPKG=/var/jb/usr/bin/dpkg
-PREFS=/var/jb/Library/PreferenceLoader/Preferences
+LOG=/var/mobile/FluidX-install.txt
+APP=/var/jb/Applications/FluidX.app
 
 {
 	echo "FluidX postinst: $(date)"
+
 	echo
-	echo "=== Пакет PreferenceLoader ==="
-	if [ -x "$DPKG" ]; then
-		"$DPKG" -s preferenceloader 2>&1 | head -n 12
-		echo "--- файлы пакета ---"
-		"$DPKG" -L preferenceloader 2>&1 | head -n 40
+	echo "=== Чистим старые файлы 0.2.x (PreferenceLoader) ==="
+	rm -f /var/jb/Library/PreferenceLoader/Preferences/FluidX.plist
+	rm -f /var/jb/Library/PreferenceLoader/Preferences/FluidXIcon.png
+	rm -f /var/jb/Library/PreferenceLoader/Preferences/FluidXIcon@2x.png
+	rm -f /var/jb/Library/PreferenceLoader/Preferences/FluidXIcon@3x.png
+	rm -rf /var/jb/Library/PreferenceBundles/FluidXPrefs.bundle
+	rm -f /var/jb/Library/MobileSubstrate/DynamicLibraries/FluidXPrefsDiag.dylib
+	rm -f /var/jb/Library/MobileSubstrate/DynamicLibraries/FluidXPrefsDiag.plist
+	rm -f /var/mobile/FluidX-prefs-diag.txt /var/mobile/FluidX-prefs-error.txt /var/mobile/FluidX-diag.txt
+	echo "готово"
+
+	echo
+	echo "=== Приложение ==="
+	ls -ld "$APP" 2>&1
+	ls -l "$APP" 2>&1 | head -n 20
+
+	echo
+	echo "=== uicache ==="
+	if [ -x /var/jb/usr/bin/uicache ]; then
+		/var/jb/usr/bin/uicache -p "$APP" 2>&1
+		echo "uicache exit=$?"
+	elif [ -x /usr/bin/uicache ]; then
+		/usr/bin/uicache -p "$APP" 2>&1
+		echo "uicache exit=$?"
 	else
-		echo "dpkg не найден"
+		echo "uicache не найден"
 	fi
+
 	echo
-	echo "=== Загрузчики твиков ==="
-	echo "-- DynamicLibraries --"
-	ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries 2>&1 | head -n 40
-	echo "-- TweakInject --"
-	ls -l /var/jb/usr/lib/TweakInject 2>&1 | head -n 40
-	echo
-	echo "=== PreferenceBundles ==="
-	ls -l /var/jb/Library/PreferenceBundles 2>&1
-	echo
-	echo "=== Плисты в PreferenceLoader/Preferences (первые 40) ==="
-	ls -l "$PREFS" 2>&1 | head -n 40
-	echo
-	echo "=== Наши файлы ==="
+	echo "=== Твик ==="
 	ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX.* 2>&1
-	ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries/FluidXPrefsDiag.* 2>&1
-	ls -l "$PREFS"/FluidX.plist "$PREFS"/FluidXIcon*.png 2>&1
-	ls -l /var/jb/Library/PreferenceBundles/FluidXPrefs.bundle 2>&1
-	echo
-	echo "=== Последние краши Настроек ==="
-	ls -lt /var/mobile/Library/Logs/CrashReporter 2>&1 | head -n 12
 } > "$LOG" 2>&1
 
 chmod 644 "$LOG" 2>/dev/null
 
-# Перезапускаем Настройки: только после этого они перечитывают список разделов.
+# Настройки держат список разделов в памяти — перезапускаем, чтобы пустой
+# пункт FluidX от прошлой версии исчез.
 for KILLALL in /var/jb/usr/bin/killall /usr/bin/killall killall; do
 	if [ -x "$KILLALL" ] || command -v "$KILLALL" >/dev/null 2>&1; then
 		"$KILLALL" -9 Preferences >/dev/null 2>&1

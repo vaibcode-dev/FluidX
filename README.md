@@ -35,7 +35,8 @@
 | Свайп сверху справа | Пункт управления |
 | Кнопка Home | Продолжает работать как раньше |
 
-Плюс настройки в **Настройки → FluidX**:
+Плюс **отдельное приложение FluidX** с иконкой на рабочем столе (не в
+Настройках — там iOS 15 упорно не отдавала наш бандл настроек):
 
 | Раздел | Что настраивается |
 |---|---|
@@ -46,6 +47,11 @@
 | Пункт управления | свайп сверху справа, фикс анимации |
 | Применение | respring, сброс настроек |
 | О твике | GitHub, Telegram [@angel_gtag](https://t.me/angel_gtag), лог сборки |
+
+Приложение пишет тот же plist, что читает твик
+(`/var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist`), поэтому
+изменения применяются сразу, без перезапуска приложения. Размер полоски и
+цвет — после respring.
 
 ---
 
@@ -115,7 +121,7 @@ git push -u origin main
 **Готовая сборка (без GitHub-аккаунта):**
 
 ```
-https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.2.3-beta_iphoneos-arm64.deb
+https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.3.0-beta_iphoneos-arm64.deb
 ```
 
 Страница релиза (там же `.deb` прикреплён файлом):
@@ -124,15 +130,24 @@ https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.
 Открой ссылку в Safari на iPhone → «Скачать» → в Filza открой файл → **Install**.
 (Ветка `ci-logs` — публичная, там же лежит `build.log` последней сборки.)
 
-> Текущая версия — **0.2.3-beta**: помечена как pre-release, потому что твик
-> ещё не проверен на живом устройстве.
+```text
+/var/jb/Applications/FluidX.app
+/var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX.dylib + FluidX.plist
+/var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist
+```
+
+> Текущая версия — **0.3.0-beta**: помечена как pre-release, потому что твик
+> ещё не проверен на всех прошивках iOS 15.
 
 Либо вручную:
 
 1. Перекинь `.deb` на телефон (iCloud Drive, Telegram «Избранное», почта, кабель).
 2. Открой в **Filza** → тап по файлу → **Install** (или «Открыть в Sileo»).
-3. Respring: из Sileo либо кнопкой в настройках твика.
-4. Проверь: свайп снизу вверх должен уводить на домашний экран,
+3. На рабочем столе появится приложение **FluidX** (его регистрирует `postinst`
+   через `uicache`). Если иконки нет — запусти в Filza
+   `/var/jb/usr/bin/uicache -p /var/jb/Applications/FluidX.app` и подожди пару секунд.
+4. Открой приложение, выставь настройки, нажми **Respring**.
+5. Проверь: свайп снизу вверх должен уводить на домашний экран,
    снизу справа/слева — переключать приложения, сверху справа — Пункт управления.
 
 Файлы на устройстве (rootless):
@@ -140,30 +155,27 @@ https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.
 ```
 /var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX.dylib
 /var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX.plist
-/var/jb/Library/PreferenceBundles/FluidXPrefs.bundle/
-/var/jb/Library/PreferenceLoader/Preferences/FluidX.plist
+/var/jb/Applications/FluidX.app
 /var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist
 ```
 
-### Если раздела «FluidX» нет в Настройках
+### Если приложения FluidX нет на рабочем столе
 
-Раздел в Настройках показывает **PreferenceLoader**, а не сам твик. Проверь по порядку:
+Приложение ставится в `/var/jb/Applications/FluidX.app` и регистрируется
+`uicache` в `postinst`. Если иконки нет:
 
-1. **Sileo → Установленные** → в поиске набери `preference`. Должен быть пакет
-   **PreferenceLoader**. Если его нет — раздел не появится ни у одного твика;
-   поставь его из репозитория своего бутстрапа (Havoc / ellekit).
-2. После установки `.deb` **принудительно закрой Настройки** (смахни из свитчера)
-   и открой заново — список разделов читается при запуске приложения.
-3. Открой в Filza два файла и пришли их в Telegram, если раздел не появился:
-   - `/var/mobile/FluidX-diag.txt` — пишет `postinst` при установке: файлы,
-     пакет PreferenceLoader, список bundle'ов, краши Настроек;
-   - `/var/mobile/FluidX-prefs-diag.txt` — пишет диагностический твик уже
-     **внутри** Настроек: читается ли наш plist, находится ли бандл и с какой
-     ошибкой он грузится.
-4. Проверь, что установлена именно свежая версия: в Sileo у FluidX должно быть
-   `0.2.3-beta`. Установка старого `.deb` поверх нового — это **понижение**
-   версии (в логе Sileo будет `downgrading`), и файлы настроек в старой сборке
-   могут быть другими.
+1. Проверь, что пакет установлен: **Sileo → Установленные → FluidX**,
+   версия должна быть `0.3.0-beta` (не `0.2.x`).
+2. Открой Filza → `/var/mobile/FluidX-install.txt` — там лог `postinst`:
+   что нашлось, что удалилось и с каким кодом отработал `uicache`.
+3. Запусти регистрацию вручную: в Filza открой
+   `/var/jb/usr/bin/uicache` (или через терминал:
+   `uicache -p /var/jb/Applications/FluidX.app`), затем подожди 5–10 секунд.
+4. Если и это не помогло — пришли в Telegram файл `/var/mobile/FluidX-install.txt`
+   и скриншот рабочего стола.
+
+Раздел **FluidX в Настройках** из версий 0.2.x больше не нужен: `postinst`
+удаляет старые файлы PreferenceLoader и перезапускает Настройки.
 
 ---
 
@@ -199,12 +211,12 @@ powershell -ExecutionPolicy Bypass -File tools\check-repo.ps1
 ### 5. Артефакт
 
 Внизу страницы запуска — **Artifacts → FluidX-deb**. Внутри zip лежит
-`com.dolboebvaibcode.fluidx_0.2.3-beta_iphoneos-arm64.deb`.
+`com.dolboebvaibcode.fluidx_0.3.0-beta_iphoneos-arm64.deb`.
 
 Проверка файла до установки:
 
 ```powershell
-python tools\inspect_deb.py "путь\к\com.dolboebvaibcode.fluidx_0.2.3-beta_iphoneos-arm64.deb"
+python tools\inspect_deb.py "путь\к\com.dolboebvaibcode.fluidx_0.3.0-beta_iphoneos-arm64.deb"
 ```
 
 Скрипт покажет package id, архитектуру, пути `/var/jb`, тип Mach-O и фильтр
@@ -217,7 +229,8 @@ dpkg -l | grep fluidx                  # пакет установлен
 ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries/   # FluidX.dylib + FluidX.plist
 ```
 
-В Настройках должен появиться пункт **FluidX**.
+На рабочем столе должно появиться приложение **FluidX**, а в его настройках —
+все ползунки и тумблеры.
 
 ---
 
@@ -226,11 +239,12 @@ ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries/   # FluidX.dylib + Fluid
 | Симптом | Решение |
 |---|---|
 | Жесты не появились | Проверь, что твик загружен: `ls /var/jb/Library/MobileSubstrate/DynamicLibraries/`, затем respring |
+| Настройки не применяются | Открой FluidX, нажми **Respring**; проверь, что в приложении стоит «Включить жесты» |
 | Полоска есть, свайпы не работают | Другой билд SpringBoard: пришли лог `log stream --predicate 'process == "SpringBoard"'`, подберём имена методов |
 | Пункт управления открывается снизу | Включи «Свайп сверху справа» и сделай respring |
 | Анимация Пункта управления дёргается | Переключи «Чинить анимацию Пункта управления» |
 | SpringBoard в цикле | Загрузись без твиков / в safe mode, удали: `dpkg -r com.dolboebvaibcode.fluidx` |
-| Настройки не появились | Не установлен PreferenceLoader — переустанови Sileo-пакет `preferenceloader` |
+| Нет иконки FluidX | Запусти `uicache -p /var/jb/Applications/FluidX.app`, см. `/var/mobile/FluidX-install.txt` |
 | Actions упал | Перезапусти workflow, затем пришли лог упавшего шага |
 
 Логи:
@@ -247,8 +261,9 @@ log stream --predicate 'process == "SpringBoard"' --level debug
 Tweak.x                      — хуки SpringBoard
 Makefile                     — arm64, iOS 15.0+, rootless
 control                      — метаданные пакета
-prefs/                       — бандл настроек (PSListController)
-layout/                      — Root.plist, Info.plist, запись в PreferenceLoader
+app/                         — приложение настроек (UIKit, без PreferenceLoader)
+app/Resources/Info.plist     — Info.plist приложения + иконки
+layout/DEBIAN/postinst       — uicache + чистка старых файлов 0.2.x
 .github/workflows/build.yml  — сборка .deb
 ```
 
@@ -261,5 +276,5 @@ layout/                      — Root.plist, Info.plist, запись в Prefere
 
 - Тонкая настройка порогов жестов (скорость/дистанция) — нужны точные имена
   методов из SpringBoard твоей прошивки, подберём по логам.
-- Настройка цвета/прозрачности полоски.
 - Отдельные переключатели для «свайп вверх + задержка» и горизонтальных свайпов.
+- Пресеты цвета полоски вместо ручного ввода HEX.

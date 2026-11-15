@@ -8,8 +8,7 @@ export INSTALL_TARGET_PROCESSES = SpringBoard
 
 # ВАЖНО: Theos читает SUBPROJECTS в момент подключения common.mk,
 # поэтому объявлять их нужно ДО include, иначе сабпроект игнорируется.
-SUBPROJECTS += prefs
-SUBPROJECTS += diag
+SUBPROJECTS += app
 
 include $(THEOS)/makefiles/common.mk
 
@@ -20,9 +19,11 @@ FluidX_FRAMEWORKS = UIKit
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
-# Без этого include подпроекты (prefs) не собираются вообще:
+# Без этого include подпроекты (app) не собираются вообще:
 # именно aggregate.mk создаёт правила internal-all/stage для SUBPROJECTS.
 include $(THEOS_MAKE_PATH)/aggregate.mk
 
+# После локальной установки регистрируем приложение в SpringBoard.
 after-install::
 	install.exec "killall -9 SpringBoard"
+	install.exec "/var/jb/usr/bin/uicache -p /var/jb/Applications/FluidX.app"

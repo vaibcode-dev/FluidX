@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+		Приложение должно читать и писать тот же plist, что и твик в SpringBoard:
+		/var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist
+
+		Без no-container и platform-application iOS заводит приложению отдельный
+		контейнер, и его NSUserDefaults пишет в
+		/var/mobile/Containers/Data/Application/<uuid>/Library/Preferences/ —
+		твик такие настройки не увидит.
+	-->
+	<key>platform-application</key>
+	<true/>
+	<key>com.apple.private.security.no-container</key>
+	<true/>
+	<key>com.apple.private.security.container-required</key>
+	<false/>
+	<key>get-task-allow</key>
+	<true/>
+</dict>
+</plist>
