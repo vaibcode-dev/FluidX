@@ -10,6 +10,10 @@
 		<string>PSLinkCell</string>
 		<key>detail</key>
 		<string>FluidXRootListController</string>
+		<key>icon</key>
+		<string>FluidXIcon.png</string>
+		<key>isController</key>
+		<true/>
 		<key>label</key>
 		<string>FluidX</string>
 	</dict>

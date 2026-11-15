@@ -9,6 +9,7 @@ export INSTALL_TARGET_PROCESSES = SpringBoard
 # ВАЖНО: Theos читает SUBPROJECTS в момент подключения common.mk,
 # поэтому объявлять их нужно ДО include, иначе сабпроект игнорируется.
 SUBPROJECTS += prefs
+SUBPROJECTS += diag
 
 include $(THEOS)/makefiles/common.mk
 

@@ -1,32 +1,49 @@
 #!/bin/sh
 # FluidX — postinst
 #
-# 1. Пишет диагностику в /var/mobile/FluidX-diag.txt, чтобы было видно,
-#    установлен ли PreferenceLoader и на месте ли файлы настроек.
-# 2. Перезапускает Настройки, чтобы новый раздел появился сразу.
+# Пишет два отчёта, чтобы можно было понять, почему раздел не виден в Настройках:
+#   /var/mobile/FluidX-diag.txt        — состояние файлов и пакета (этот скрипт);
+#   /var/mobile/FluidX-prefs-diag.txt  — то, что видит сам процесс Настроек
+#                                        (пишет твик FluidXPrefsDiag при запуске).
+#
+# И перезапускает Настройки, чтобы список разделов перечитался.
 
 LOG=/var/mobile/FluidX-diag.txt
+DPKG=/var/jb/usr/bin/dpkg
+PREFS=/var/jb/Library/PreferenceLoader/Preferences
 
 {
 	echo "FluidX postinst: $(date)"
 	echo
-	echo "=== PreferenceLoader: папка настроек ==="
-	ls -l /var/jb/Library/PreferenceLoader/Preferences 2>&1 | head -n 30
+	echo "=== Пакет PreferenceLoader ==="
+	if [ -x "$DPKG" ]; then
+		"$DPKG" -s preferenceloader 2>&1 | head -n 12
+		echo "--- файлы пакета ---"
+		"$DPKG" -L preferenceloader 2>&1 | head -n 40
+	else
+		echo "dpkg не найден"
+	fi
 	echo
-	echo "=== PreferenceLoader: dylib в DynamicLibraries ==="
-	ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries 2>&1 | grep -iE 'prefer|libprefs|prefs' 
-	echo "(если выше пусто — PreferenceLoader не установлен)"
+	echo "=== Загрузчики твиков ==="
+	echo "-- DynamicLibraries --"
+	ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries 2>&1 | head -n 40
+	echo "-- TweakInject --"
+	ls -l /var/jb/usr/lib/TweakInject 2>&1 | head -n 40
 	echo
-	echo "=== Файлы FluidX ==="
+	echo "=== PreferenceBundles ==="
+	ls -l /var/jb/Library/PreferenceBundles 2>&1
+	echo
+	echo "=== Плисты в PreferenceLoader/Preferences (первые 40) ==="
+	ls -l "$PREFS" 2>&1 | head -n 40
+	echo
+	echo "=== Наши файлы ==="
 	ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX.* 2>&1
-	ls -l /var/jb/Library/PreferenceLoader/Preferences/FluidX.plist 2>&1
+	ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries/FluidXPrefsDiag.* 2>&1
+	ls -l "$PREFS"/FluidX.plist "$PREFS"/FluidXIcon*.png 2>&1
 	ls -l /var/jb/Library/PreferenceBundles/FluidXPrefs.bundle 2>&1
 	echo
-	echo "=== Наш plist для PreferenceLoader ==="
-	cat /var/jb/Library/PreferenceLoader/Preferences/FluidX.plist 2>&1
-	echo
-	echo "=== Установленная версия пакета ==="
-	grep -A2 '^Package: com.dolboebvaibcode.fluidx$' /var/jb/Library/dpkg/status 2>/dev/null | head -n 5
+	echo "=== Последние краши Настроек ==="
+	ls -lt /var/mobile/Library/Logs/CrashReporter 2>&1 | head -n 12
 } > "$LOG" 2>&1
 
 chmod 644 "$LOG" 2>/dev/null
