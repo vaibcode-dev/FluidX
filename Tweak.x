@@ -2,7 +2,7 @@
 //
 // Идея: не рисовать свои распознаватели (они дают рывки и конфликты),
 // а включить встроенный движок жестов SpringBoard и аккуратно
-// перенастроить внешний вид полоски и Пункт управления.
+// перенастроить внешний вид полоски и Пункта управления.
 
 #import <UIKit/UIKit.h>
 
@@ -13,6 +13,10 @@ static BOOL gEnabled = YES;
 static BOOL gShowHomeBar = YES;
 static double gBarHeight = 0.0; // 0 = системная высота
 static double gBarWidth = 0.0;  // 0 = системная ширина
+static double gBarAlpha = 1.0;  // 1 = системная прозрачность
+static UIColor *gBarColor = nil; // nil = системный цвет (светлый/тёмный)
+static double gAnimSpeed = 1.0;  // 1 = системная скорость
+static BOOL gNoBlur = NO;        // убрать блюр подложек (экономия GPU)
 static BOOL gCCEdgeFix = YES;
 static BOOL gCCAnimFix = YES;
 
@@ -22,15 +26,51 @@ static NSUserDefaults *Prefs(void) {
 	dispatch_once(&once, ^{
 		defaults = [[NSUserDefaults alloc] initWithSuiteName:PREFS_DOMAIN];
 		[defaults registerDefaults:@{
-			@"enabled"     : @YES,
-			@"showHomeBar" : @YES,
+			@"enabled"       : @YES,
+			@"showHomeBar"   : @YES,
 			@"homeBarHeight" : @0.0,
 			@"homeBarWidth"  : @0.0,
-			@"ccEdgeFix"   : @YES,
-			@"ccAnimFix"   : @YES,
+			@"homeBarAlpha"  : @1.0,
+			@"homeBarColor"  : @"",
+			@"animSpeed"     : @1.0,
+			@"noBlur"        : @NO,
+			@"ccEdgeFix"     : @YES,
+			@"ccAnimFix"     : @YES,
 		}];
 	});
 	return defaults;
+}
+
+// "#RRGGBB" / "RRGGBB" / "#RRGGBBAA" -> UIColor
+static UIColor *ColorFromHex(NSString *hex) {
+	if (![hex isKindOfClass:[NSString class]] || hex.length == 0) {
+		return nil;
+	}
+
+	NSString *clean = [[hex stringByReplacingOccurrencesOfString:@"#" withString:@""]
+		stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	if (clean.length != 6 && clean.length != 8) {
+		return nil;
+	}
+
+	unsigned int value = 0;
+	NSScanner *scanner = [NSScanner scannerWithString:clean];
+	if (![scanner scanHexInt:&value]) {
+		return nil;
+	}
+
+	CGFloat r, g, b, a = 1.0;
+	if (clean.length == 8) {
+		r = ((value >> 24) & 0xFF) / 255.0;
+		g = ((value >> 16) & 0xFF) / 255.0;
+		b = ((value >> 8) & 0xFF) / 255.0;
+		a = (value & 0xFF) / 255.0;
+	} else {
+		r = ((value >> 16) & 0xFF) / 255.0;
+		g = ((value >> 8) & 0xFF) / 255.0;
+		b = (value & 0xFF) / 255.0;
+	}
+	return [UIColor colorWithRed:r green:g blue:b alpha:a];
 }
 
 static void LoadPrefs(void) {
@@ -39,8 +79,20 @@ static void LoadPrefs(void) {
 	gShowHomeBar = [d boolForKey:@"showHomeBar"];
 	gBarHeight   = [d doubleForKey:@"homeBarHeight"];
 	gBarWidth    = [d doubleForKey:@"homeBarWidth"];
+	gBarAlpha    = [d doubleForKey:@"homeBarAlpha"];
+	gAnimSpeed   = [d doubleForKey:@"animSpeed"];
+	gNoBlur      = [d boolForKey:@"noBlur"];
 	gCCEdgeFix   = [d boolForKey:@"ccEdgeFix"];
 	gCCAnimFix   = [d boolForKey:@"ccAnimFix"];
+
+	if (gBarAlpha <= 0.0) {
+		gBarAlpha = 1.0;
+	}
+	if (gAnimSpeed <= 0.05) {
+		gAnimSpeed = 1.0;
+	}
+
+	gBarColor = ColorFromHex([d stringForKey:@"homeBarColor"]);
 }
 
 static void PrefsChanged(CFNotificationCenterRef center, void *observer, CFStringRef name,
@@ -105,6 +157,84 @@ static void PrefsChanged(CFNotificationCenterRef center, void *observer, CFStrin
 		return;
 	}
 	%orig(width);
+}
+
+%end
+
+// Цвет полоски. Полоска — материал (MTMaterialView), поэтому красим
+// аккуратно и только когда пользователь явно задал цвет.
+%hook MTLumaDodgePillView
+
+- (void)layoutSubviews {
+	%orig;
+	if (gEnabled && gBarColor) {
+		self.backgroundColor = gBarColor;
+		self.layer.backgroundColor = gBarColor.CGColor;
+	}
+}
+
+%end
+
+// Прозрачность полоски: альфа системная умножается на пользовательскую.
+%hook SBHomeGrabberView
+
+- (void)setAlpha:(CGFloat)alpha {
+	if (gEnabled && gBarAlpha < 1.0) {
+		%orig(alpha * gBarAlpha);
+		return;
+	}
+	%orig(alpha);
+}
+
+%end
+
+#pragma mark - Скорость анимаций
+
+// Умножаем длительность UIView-анимаций. При 1.0 ничего не меняется,
+// поэтому по умолчанию поведение системы полностью штатное.
+%hook UIView
+
++ (void)animateWithDuration:(NSTimeInterval)duration animations:(void (^)(void))animations {
+	if (gEnabled && gAnimSpeed != 1.0) {
+		%orig(duration * gAnimSpeed, animations);
+		return;
+	}
+	%orig(duration, animations);
+}
+
++ (void)animateWithDuration:(NSTimeInterval)duration animations:(void (^)(void))animations
+                 completion:(void (^)(BOOL finished))completion {
+	if (gEnabled && gAnimSpeed != 1.0) {
+		%orig(duration * gAnimSpeed, animations, completion);
+		return;
+	}
+	%orig(duration, animations, completion);
+}
+
++ (void)animateWithDuration:(NSTimeInterval)duration delay:(NSTimeInterval)delay
+                    options:(UIViewAnimationOptions)options animations:(void (^)(void))animations
+                 completion:(void (^)(BOOL finished))completion {
+	if (gEnabled && gAnimSpeed != 1.0) {
+		%orig(duration * gAnimSpeed, delay * gAnimSpeed, options, animations, completion);
+		return;
+	}
+	%orig(duration, delay, options, animations, completion);
+}
+
+%end
+
+#pragma mark - Блюр системных подложек (экономия GPU)
+
+// Полностью убирает размытие в SpringBoard: Пункт управления, папки,
+// Spotlight. На A10 заметно бодрее, но выглядит «плоско» — по умолчанию выключено.
+%hook UIVisualEffectView
+
+- (void)setEffect:(UIVisualEffect *)effect {
+	if (gEnabled && gNoBlur && [effect isKindOfClass:NSClassFromString(@"UIBlurEffect")]) {
+		%orig(nil);
+		return;
+	}
+	%orig(effect);
 }
 
 %end

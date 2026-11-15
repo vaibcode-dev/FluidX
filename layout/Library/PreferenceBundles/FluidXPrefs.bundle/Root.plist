@@ -47,9 +47,9 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Размер полоски</string>
+			<string>Домашняя полоска</string>
 			<key>footerText</key>
-			<string>0 — системный размер. Значения применяются после respring.</string>
+			<string>0 — системный размер. Прозрачность 100% — как в системе. Цвет задаётся в HEX: например FF2D55 или 00A3FF. Пустое поле — системный цвет (сам становится светлым или тёмным).</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -88,6 +88,94 @@
 			<real>220</real>
 			<key>showValue</key>
 			<true/>
+			<key>PostNotification</key>
+			<string>com.dolboebvaibcode.fluidx/ReloadPrefs</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>label</key>
+			<string>Прозрачность</string>
+			<key>defaults</key>
+			<string>com.dolboebvaibcode.fluidx</string>
+			<key>key</key>
+			<string>homeBarAlpha</string>
+			<key>default</key>
+			<real>1</real>
+			<key>minValue</key>
+			<real>0.1</real>
+			<key>maxValue</key>
+			<real>1</real>
+			<key>showValue</key>
+			<true/>
+			<key>PostNotification</key>
+			<string>com.dolboebvaibcode.fluidx/ReloadPrefs</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSEditTextCell</string>
+			<key>label</key>
+			<string>Цвет (HEX)</string>
+			<key>defaults</key>
+			<string>com.dolboebvaibcode.fluidx</string>
+			<key>key</key>
+			<string>homeBarColor</string>
+			<key>default</key>
+			<string></string>
+			<key>placeholder</key>
+			<string>например FF2D55</string>
+			<key>PostNotification</key>
+			<string>com.dolboebvaibcode.fluidx/ReloadPrefs</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Анимации</string>
+			<key>footerText</key>
+			<string>1.0 — как в системе. Меньше — быстрее, больше — медленнее. Ускоряет анимации интерфейса SpringBoard (открытие папок, свайпы, Пункт управления).</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSliderCell</string>
+			<key>label</key>
+			<string>Скорость</string>
+			<key>defaults</key>
+			<string>com.dolboebvaibcode.fluidx</string>
+			<key>key</key>
+			<string>animSpeed</string>
+			<key>default</key>
+			<real>1</real>
+			<key>minValue</key>
+			<real>0.5</real>
+			<key>maxValue</key>
+			<real>2</real>
+			<key>showValue</key>
+			<true/>
+			<key>PostNotification</key>
+			<string>com.dolboebvaibcode.fluidx/ReloadPrefs</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>Производительность</string>
+			<key>footerText</key>
+			<string>Отключает размытие системных подложек (Пункт управления, папки, Spotlight). На iPhone 7 заметно легче GPU, но интерфейс выглядит плоским.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>label</key>
+			<string>Без блюра (быстрее)</string>
+			<key>defaults</key>
+			<string>com.dolboebvaibcode.fluidx</string>
+			<key>key</key>
+			<string>noBlur</string>
+			<key>default</key>
+			<false/>
 			<key>PostNotification</key>
 			<string>com.dolboebvaibcode.fluidx/ReloadPrefs</string>
 		</dict>
@@ -134,6 +222,8 @@
 			<string>PSGroupCell</string>
 			<key>label</key>
 			<string>Применение</string>
+			<key>footerText</key>
+			<string>Все настройки применяются сразу, кроме размеров полоски и цвета — им нужен respring.</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -143,14 +233,48 @@
 			<key>action</key>
 			<string>respring</string>
 		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Сбросить настройки</string>
+			<key>action</key>
+			<string>resetPrefs</string>
+		</dict>
 
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Дисклеймер</string>
+			<string>О твике</string>
 			<key>footerText</key>
-			<string>Твик написан нейросетью (ИИ) в учебных целях. Автор не несёт никакой ответственности за ваш iPhone и за последствия установки: зависания, циклический respring, потерю данных, необходимость перепрошивки. Всё, что вы делаете, — на ваш страх и риск.</string>
+			<string>FluidX 0.2.0-beta · com.dolboebvaibcode.fluidx · iOS 15 rootless
+
+Твик написан нейросетью (ИИ) в учебных целях. Автор не несёт никакой ответственности за ваш iPhone и последствия установки: зависания, циклический respring, потерю данных, необходимость перепрошивки. Всё на ваш страх и риск.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>GitHub: vaibcode-dev/FluidX</string>
+			<key>action</key>
+			<string>openGitHub</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Telegram: @angel_gtag</string>
+			<key>action</key>
+			<string>openTelegram</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>Последний лог сборки</string>
+			<key>action</key>
+			<string>openBuildLog</string>
 		</dict>
 	</array>
 </dict>

@@ -35,8 +35,17 @@
 | Свайп сверху справа | Пункт управления |
 | Кнопка Home | Продолжает работать как раньше |
 
-Плюс настройки в **Настройки → FluidX**: включение, показ полоски,
-высота/ширина полоски, свайп Пункта управления, фикс анимации, кнопка respring.
+Плюс настройки в **Настройки → FluidX**:
+
+| Раздел | Что настраивается |
+|---|---|
+| Жесты iPhone X | включение, показ домашней полоски |
+| Домашняя полоска | высота, ширина, прозрачность, цвет в HEX |
+| Анимации | скорость интерфейса SpringBoard (0.5–2.0) |
+| Производительность | режим «без блюра» — легче GPU на A10 |
+| Пункт управления | свайп сверху справа, фикс анимации |
+| Применение | respring, сброс настроек |
+| О твике | GitHub, Telegram [@angel_gtag](https://t.me/angel_gtag), лог сборки |
 
 ---
 
@@ -106,7 +115,7 @@ git push -u origin main
 **Готовая сборка (без GitHub-аккаунта):**
 
 ```
-https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.1.0-beta_iphoneos-arm64.deb
+https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.2.0-beta_iphoneos-arm64.deb
 ```
 
 Страница релиза (там же `.deb` прикреплён файлом):
@@ -115,7 +124,7 @@ https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.
 Открой ссылку в Safari на iPhone → «Скачать» → в Filza открой файл → **Install**.
 (Ветка `ci-logs` — публичная, там же лежит `build.log` последней сборки.)
 
-> Текущая версия — **0.1.0-beta**: помечена как pre-release, потому что твик
+> Текущая версия — **0.2.0-beta**: помечена как pre-release, потому что твик
 > ещё не проверен на живом устройстве.
 
 Либо вручную:
@@ -170,12 +179,12 @@ powershell -ExecutionPolicy Bypass -File tools\check-repo.ps1
 ### 5. Артефакт
 
 Внизу страницы запуска — **Artifacts → FluidX-deb**. Внутри zip лежит
-`com.dolboebvaibcode.fluidx_0.1.0_iphoneos-arm64.deb`.
+`com.dolboebvaibcode.fluidx_0.2.0-beta_iphoneos-arm64.deb`.
 
 Проверка файла до установки:
 
 ```powershell
-python tools\inspect_deb.py "путь\к\com.dolboebvaibcode.fluidx_0.1.0_iphoneos-arm64.deb"
+python tools\inspect_deb.py "путь\к\com.dolboebvaibcode.fluidx_0.2.0-beta_iphoneos-arm64.deb"
 ```
 
 Скрипт покажет package id, архитектуру, пути `/var/jb`, тип Mach-O и фильтр
