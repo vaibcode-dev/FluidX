@@ -19,5 +19,9 @@ FluidX_FRAMEWORKS = UIKit
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
+# Без этого include подпроекты (prefs) не собираются вообще:
+# именно aggregate.mk создаёт правила internal-all/stage для SUBPROJECTS.
+include $(THEOS_MAKE_PATH)/aggregate.mk
+
 after-install::
 	install.exec "killall -9 SpringBoard"
