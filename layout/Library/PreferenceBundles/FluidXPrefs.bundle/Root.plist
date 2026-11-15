@@ -10,15 +10,15 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Жесты iPhone X</string>
+			<string>Р–РµСЃС‚С‹ iPhone X</string>
 			<key>footerText</key>
-			<string>Используется родной движок жестов SpringBoard, поэтому анимации плавные и не нагружают систему.</string>
+			<string>РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ СЂРѕРґРЅРѕР№ РґРІРёР¶РѕРє Р¶РµСЃС‚РѕРІ SpringBoard, РїРѕСЌС‚РѕРјСѓ Р°РЅРёРјР°С†РёРё РїР»Р°РІРЅС‹Рµ Рё РЅРµ РЅР°РіСЂСѓР¶Р°СЋС‚ СЃРёСЃС‚РµРјСѓ.</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>label</key>
-			<string>Включить жесты</string>
+			<string>Р’РєР»СЋС‡РёС‚СЊ Р¶РµСЃС‚С‹</string>
 			<key>defaults</key>
 			<string>com.dolboebvaibcode.fluidx</string>
 			<key>key</key>
@@ -32,7 +32,7 @@
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>label</key>
-			<string>Показывать домашнюю полоску</string>
+			<string>РџРѕРєР°Р·С‹РІР°С‚СЊ РґРѕРјР°С€РЅСЋСЋ РїРѕР»РѕСЃРєСѓ</string>
 			<key>defaults</key>
 			<string>com.dolboebvaibcode.fluidx</string>
 			<key>key</key>
@@ -47,15 +47,15 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Домашняя полоска</string>
+			<string>Р”РѕРјР°С€РЅСЏСЏ РїРѕР»РѕСЃРєР°</string>
 			<key>footerText</key>
-			<string>0 — системный размер. Прозрачность 100% — как в системе. Цвет задаётся в HEX: например FF2D55 или 00A3FF. Пустое поле — системный цвет (сам становится светлым или тёмным).</string>
+			<string>0 вЂ” СЃРёСЃС‚РµРјРЅС‹Р№ СЂР°Р·РјРµСЂ. РџСЂРѕР·СЂР°С‡РЅРѕСЃС‚СЊ 100% вЂ” РєР°Рє РІ СЃРёСЃС‚РµРјРµ. Р¦РІРµС‚ Р·Р°РґР°С‘С‚СЃСЏ РІ HEX: РЅР°РїСЂРёРјРµСЂ FF2D55 РёР»Рё 00A3FF. РџСѓСЃС‚РѕРµ РїРѕР»Рµ вЂ” СЃРёСЃС‚РµРјРЅС‹Р№ С†РІРµС‚ (СЃР°Рј СЃС‚Р°РЅРѕРІРёС‚СЃСЏ СЃРІРµС‚Р»С‹Рј РёР»Рё С‚С‘РјРЅС‹Рј).</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSliderCell</string>
 			<key>label</key>
-			<string>Высота</string>
+			<string>Р’С‹СЃРѕС‚Р°</string>
 			<key>defaults</key>
 			<string>com.dolboebvaibcode.fluidx</string>
 			<key>key</key>
@@ -75,7 +75,7 @@
 			<key>cell</key>
 			<string>PSSliderCell</string>
 			<key>label</key>
-			<string>Ширина</string>
+			<string>РЁРёСЂРёРЅР°</string>
 			<key>defaults</key>
 			<string>com.dolboebvaibcode.fluidx</string>
 			<key>key</key>
@@ -95,7 +95,7 @@
 			<key>cell</key>
 			<string>PSSliderCell</string>
 			<key>label</key>
-			<string>Прозрачность</string>
+			<string>РџСЂРѕР·СЂР°С‡РЅРѕСЃС‚СЊ</string>
 			<key>defaults</key>
 			<string>com.dolboebvaibcode.fluidx</string>
 			<key>key</key>
@@ -113,9 +113,9 @@
 		</dict>
 		<dict>
 			<key>cell</key>
-			<string>PSEditTextCell</string>
+			<string>PSTextFieldSpecifier</string>
 			<key>label</key>
-			<string>Цвет (HEX)</string>
+			<string>Р¦РІРµС‚ (HEX)</string>
 			<key>defaults</key>
 			<string>com.dolboebvaibcode.fluidx</string>
 			<key>key</key>
@@ -123,7 +123,7 @@
 			<key>default</key>
 			<string></string>
 			<key>placeholder</key>
-			<string>например FF2D55</string>
+			<string>РЅР°РїСЂРёРјРµСЂ FF2D55</string>
 			<key>PostNotification</key>
 			<string>com.dolboebvaibcode.fluidx/ReloadPrefs</string>
 		</dict>
@@ -132,15 +132,15 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Анимации</string>
+			<string>РђРЅРёРјР°С†РёРё</string>
 			<key>footerText</key>
-			<string>1.0 — как в системе. Меньше — быстрее, больше — медленнее. Ускоряет анимации интерфейса SpringBoard (открытие папок, свайпы, Пункт управления).</string>
+			<string>1.0 вЂ” РєР°Рє РІ СЃРёСЃС‚РµРјРµ. РњРµРЅСЊС€Рµ вЂ” Р±С‹СЃС‚СЂРµРµ, Р±РѕР»СЊС€Рµ вЂ” РјРµРґР»РµРЅРЅРµРµ. РЈСЃРєРѕСЂСЏРµС‚ Р°РЅРёРјР°С†РёРё РёРЅС‚РµСЂС„РµР№СЃР° SpringBoard (РѕС‚РєСЂС‹С‚РёРµ РїР°РїРѕРє, СЃРІР°Р№РїС‹, РџСѓРЅРєС‚ СѓРїСЂР°РІР»РµРЅРёСЏ).</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSliderCell</string>
 			<key>label</key>
-			<string>Скорость</string>
+			<string>РЎРєРѕСЂРѕСЃС‚СЊ</string>
 			<key>defaults</key>
 			<string>com.dolboebvaibcode.fluidx</string>
 			<key>key</key>
@@ -161,15 +161,15 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Производительность</string>
+			<string>РџСЂРѕРёР·РІРѕРґРёС‚РµР»СЊРЅРѕСЃС‚СЊ</string>
 			<key>footerText</key>
-			<string>Отключает размытие системных подложек (Пункт управления, папки, Spotlight). На iPhone 7 заметно легче GPU, но интерфейс выглядит плоским.</string>
+			<string>РћС‚РєР»СЋС‡Р°РµС‚ СЂР°Р·РјС‹С‚РёРµ СЃРёСЃС‚РµРјРЅС‹С… РїРѕРґР»РѕР¶РµРє (РџСѓРЅРєС‚ СѓРїСЂР°РІР»РµРЅРёСЏ, РїР°РїРєРё, Spotlight). РќР° iPhone 7 Р·Р°РјРµС‚РЅРѕ Р»РµРіС‡Рµ GPU, РЅРѕ РёРЅС‚РµСЂС„РµР№СЃ РІС‹РіР»СЏРґРёС‚ РїР»РѕСЃРєРёРј.</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>label</key>
-			<string>Без блюра (быстрее)</string>
+			<string>Р‘РµР· Р±Р»СЋСЂР° (Р±С‹СЃС‚СЂРµРµ)</string>
 			<key>defaults</key>
 			<string>com.dolboebvaibcode.fluidx</string>
 			<key>key</key>
@@ -184,15 +184,15 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Пункт управления</string>
+			<string>РџСѓРЅРєС‚ СѓРїСЂР°РІР»РµРЅРёСЏ</string>
 			<key>footerText</key>
-			<string>При включённых жестах свайп снизу забирает «Домой», поэтому Пункт управления переносится на свайп сверху справа.</string>
+			<string>РџСЂРё РІРєР»СЋС‡С‘РЅРЅС‹С… Р¶РµСЃС‚Р°С… СЃРІР°Р№Рї СЃРЅРёР·Сѓ Р·Р°Р±РёСЂР°РµС‚ В«Р”РѕРјРѕР№В», РїРѕСЌС‚РѕРјСѓ РџСѓРЅРєС‚ СѓРїСЂР°РІР»РµРЅРёСЏ РїРµСЂРµРЅРѕСЃРёС‚СЃСЏ РЅР° СЃРІР°Р№Рї СЃРІРµСЂС…Сѓ СЃРїСЂР°РІР°.</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>label</key>
-			<string>Свайп сверху справа</string>
+			<string>РЎРІР°Р№Рї СЃРІРµСЂС…Сѓ СЃРїСЂР°РІР°</string>
 			<key>defaults</key>
 			<string>com.dolboebvaibcode.fluidx</string>
 			<key>key</key>
@@ -206,7 +206,7 @@
 			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>label</key>
-			<string>Чинить анимацию Пункта управления</string>
+			<string>Р§РёРЅРёС‚СЊ Р°РЅРёРјР°С†РёСЋ РџСѓРЅРєС‚Р° СѓРїСЂР°РІР»РµРЅРёСЏ</string>
 			<key>defaults</key>
 			<string>com.dolboebvaibcode.fluidx</string>
 			<key>key</key>
@@ -221,9 +221,9 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Применение</string>
+			<string>РџСЂРёРјРµРЅРµРЅРёРµ</string>
 			<key>footerText</key>
-			<string>Все настройки применяются сразу, кроме размеров полоски и цвета — им нужен respring.</string>
+			<string>Р’СЃРµ РЅР°СЃС‚СЂРѕР№РєРё РїСЂРёРјРµРЅСЏСЋС‚СЃСЏ СЃСЂР°Р·Сѓ, РєСЂРѕРјРµ СЂР°Р·РјРµСЂРѕРІ РїРѕР»РѕСЃРєРё Рё С†РІРµС‚Р° вЂ” РёРј РЅСѓР¶РµРЅ respring.</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -237,7 +237,7 @@
 			<key>cell</key>
 			<string>PSButtonCell</string>
 			<key>label</key>
-			<string>Сбросить настройки</string>
+			<string>РЎР±СЂРѕСЃРёС‚СЊ РЅР°СЃС‚СЂРѕР№РєРё</string>
 			<key>action</key>
 			<string>resetPrefs</string>
 		</dict>
@@ -246,11 +246,11 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>О твике</string>
+			<string>Рћ С‚РІРёРєРµ</string>
 			<key>footerText</key>
-			<string>FluidX 0.2.2-beta · com.dolboebvaibcode.fluidx · iOS 15 rootless
+			<string>FluidX 0.2.3-beta В· com.dolboebvaibcode.fluidx В· iOS 15 rootless
 
-Твик написан нейросетью (ИИ) в учебных целях. Автор не несёт никакой ответственности за ваш iPhone и последствия установки: зависания, циклический respring, потерю данных, необходимость перепрошивки. Всё на ваш страх и риск.</string>
+РўРІРёРє РЅР°РїРёСЃР°РЅ РЅРµР№СЂРѕСЃРµС‚СЊСЋ (РР) РІ СѓС‡РµР±РЅС‹С… С†РµР»СЏС…. РђРІС‚РѕСЂ РЅРµ РЅРµСЃС‘С‚ РЅРёРєР°РєРѕР№ РѕС‚РІРµС‚СЃС‚РІРµРЅРЅРѕСЃС‚Рё Р·Р° РІР°С€ iPhone Рё РїРѕСЃР»РµРґСЃС‚РІРёСЏ СѓСЃС‚Р°РЅРѕРІРєРё: Р·Р°РІРёСЃР°РЅРёСЏ, С†РёРєР»РёС‡РµСЃРєРёР№ respring, РїРѕС‚РµСЂСЋ РґР°РЅРЅС‹С…, РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚СЊ РїРµСЂРµРїСЂРѕС€РёРІРєРё. Р’СЃС‘ РЅР° РІР°С€ СЃС‚СЂР°С… Рё СЂРёСЃРє.</string>
 		</dict>
 		<dict>
 			<key>cell</key>
@@ -272,7 +272,7 @@
 			<key>cell</key>
 			<string>PSButtonCell</string>
 			<key>label</key>
-			<string>Последний лог сборки</string>
+			<string>РџРѕСЃР»РµРґРЅРёР№ Р»РѕРі СЃР±РѕСЂРєРё</string>
 			<key>action</key>
 			<string>openBuildLog</string>
 		</dict>

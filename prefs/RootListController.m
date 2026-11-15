@@ -1,5 +1,6 @@
 #import "RootListController.h"
 
+#import <Preferences/PSSpecifier.h>
 #import <spawn.h>
 #import <unistd.h>
 
@@ -20,9 +21,53 @@ static void SpawnCommand(const char *path, const char *arg1, const char *arg2) {
 
 @implementation FluidXRootListController
 
+// PSListController по умолчанию ищет Root.plist в бандле, который может быть
+// подставлен PreferenceLoader'ом (папка Preferences). Возвращаем именно свой
+// бандл — там лежит Root.plist.
+- (NSBundle *)bundle {
+	NSBundle *own = [NSBundle bundleForClass:[self class]];
+	return own ?: [super bundle];
+}
+
+- (NSString *)diagnosticText {
+	NSBundle *b = [self bundle];
+	NSString *rootPath = [b pathForResource:@"Root" ofType:@"plist"];
+	NSDictionary *plist = rootPath ? [NSDictionary dictionaryWithContentsOfFile:rootPath] : nil;
+	id items = plist[@"items"];
+
+	return [NSString stringWithFormat:
+	        @"Диагностика FluidX\n"
+	        @"bundle: %@\n"
+	        @"Root.plist: %@\n"
+	        @"items: %@\n"
+	        @"класс: %@",
+	        [b bundlePath],
+	        rootPath ?: @"не найден",
+	        items ? [NSString stringWithFormat:@"%lu", (unsigned long)[items count]] : @"не прочитан",
+	        NSStringFromClass([self class])];
+}
+
+- (void)writeDiagnostic:(NSString *)text {
+	[text writeToFile:@"/var/mobile/FluidX-prefs-error.txt"
+	           atomically:YES
+	             encoding:NSUTF8StringEncoding
+	                error:NULL];
+}
+
 - (NSArray *)specifiers {
 	if (!_specifiers) {
 		_specifiers = [self loadSpecifiersFromPlistName:@"Root" target:self];
+
+		// Если по какой-то причине список пуст — показываем причину прямо
+		// в Настройках и дублируем её в файл, чтобы не гадать.
+		if (_specifiers.count == 0) {
+			NSString *diag = [self diagnosticText];
+			[self writeDiagnostic:diag];
+
+			PSSpecifier *group = [PSSpecifier emptyGroupSpecifier];
+			[group setProperty:diag forKey:@"footerText"];
+			_specifiers = @[ group ];
+		}
 	}
 	return _specifiers;
 }

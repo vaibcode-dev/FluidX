@@ -115,7 +115,7 @@ git push -u origin main
 **Готовая сборка (без GitHub-аккаунта):**
 
 ```
-https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.2.2-beta_iphoneos-arm64.deb
+https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.2.3-beta_iphoneos-arm64.deb
 ```
 
 Страница релиза (там же `.deb` прикреплён файлом):
@@ -124,7 +124,7 @@ https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.
 Открой ссылку в Safari на iPhone → «Скачать» → в Filza открой файл → **Install**.
 (Ветка `ci-logs` — публичная, там же лежит `build.log` последней сборки.)
 
-> Текущая версия — **0.2.2-beta**: помечена как pre-release, потому что твик
+> Текущая версия — **0.2.3-beta**: помечена как pre-release, потому что твик
 > ещё не проверен на живом устройстве.
 
 Либо вручную:
@@ -161,7 +161,7 @@ https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.
      **внутри** Настроек: читается ли наш plist, находится ли бандл и с какой
      ошибкой он грузится.
 4. Проверь, что установлена именно свежая версия: в Sileo у FluidX должно быть
-   `0.2.2-beta`. Установка старого `.deb` поверх нового — это **понижение**
+   `0.2.3-beta`. Установка старого `.deb` поверх нового — это **понижение**
    версии (в логе Sileo будет `downgrading`), и файлы настроек в старой сборке
    могут быть другими.
 
@@ -199,12 +199,12 @@ powershell -ExecutionPolicy Bypass -File tools\check-repo.ps1
 ### 5. Артефакт
 
 Внизу страницы запуска — **Artifacts → FluidX-deb**. Внутри zip лежит
-`com.dolboebvaibcode.fluidx_0.2.2-beta_iphoneos-arm64.deb`.
+`com.dolboebvaibcode.fluidx_0.2.3-beta_iphoneos-arm64.deb`.
 
 Проверка файла до установки:
 
 ```powershell
-python tools\inspect_deb.py "путь\к\com.dolboebvaibcode.fluidx_0.2.2-beta_iphoneos-arm64.deb"
+python tools\inspect_deb.py "путь\к\com.dolboebvaibcode.fluidx_0.2.3-beta_iphoneos-arm64.deb"
 ```
 
 Скрипт покажет package id, архитектуру, пути `/var/jb`, тип Mach-O и фильтр
