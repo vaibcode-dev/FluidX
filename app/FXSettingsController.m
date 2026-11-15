@@ -128,8 +128,14 @@ static void FXSpawn(const char *path, const char *arg1, const char *arg2) {
 		    @"ответственности за ваш iPhone и последствия установки: зависания, "
 		    @"циклический respring, потерю данных, необходимость перепрошивки. "
 		    @"Всё на ваш страх и риск.\n\n"
-		    @"Если настройки не доходят до твика — пришли файл /var/mobile/FluidX-app.txt.",
-		    FXVersionString()],
+		    @"Настройки хранятся в /var/mobile/Library/Preferences/"
+		    @"com.dolboebvaibcode.fluidx.plist — %@.\n"
+		    @"Если ползунки не влияют на жесты, пришли скриншот этого экрана.",
+		    FXVersionString(),
+		    [[NSFileManager defaultManager]
+		        fileExistsAtPath:@"/var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist"]
+		        ? @"файл на месте"
+		        : @"файла пока нет"],
 	];
 
 	self.sections = @[
