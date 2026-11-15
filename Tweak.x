@@ -140,6 +140,18 @@ static void PrefsChanged(CFNotificationCenterRef center, void *observer, CFStrin
 }
 %end
 
+// Закрытие Пункта управления без анимации — приём из проверенных
+// реализаций HomeGesture для iOS 13–15: иначе оверлей «дёргается»
+// при свайпе сверху справа.
+%hook CCUIModularControlCenterOverlayViewController
+- (void)dismissAnimated:(BOOL)animated withCompletionHandler:(id)completion {
+	if (gEnabled && gCCAnimFix) {
+		animated = NO;
+	}
+	%orig(animated, completion);
+}
+%end
+
 #pragma mark - Инициализация
 
 %ctor {
