@@ -5,7 +5,7 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
-# Нужно, чтобы CI мог закоммитить лог сборки в ветку ci-logs
+# Нужно, чтобы CI мог закоммитить артефакты в ветку ci-logs
 permissions:
   contents: write
 
@@ -25,7 +25,6 @@ jobs:
           uname -a
 
       # Готовый установщик Theos: ставит зависимости, Linux-тулчейн и все SDK.
-      # Сам обходит проблемы Ubuntu 26 (libxml2-16, binutils-gold).
       - name: Install Theos
         uses: Randomblock1/theos-action@v1.6
         with:
@@ -37,7 +36,6 @@ jobs:
           echo "THEOS=${THEOS}"
           test -f "${THEOS}/makefiles/common.mk" || { echo "::error::Theos не установился: нет makefiles/common.mk"; exit 1; }
           test -d "${THEOS}/sdks/iPhoneOS15.6.sdk" || { echo "::error::Нет SDK iPhoneOS15.6"; ls "${THEOS}/sdks"; exit 1; }
-          ls "${THEOS}/toolchain"/*/iphone/bin/clang* 2>/dev/null || true
           echo "--- clang ---"
           "${THEOS}/toolchain/linux/iphone/bin/clang" --version || true
 
@@ -53,37 +51,32 @@ jobs:
           path: packages/*.deb
           if-no-files-found: error
 
-      # Кладём .deb в публичную ветку: прямая ссылка без входа в GitHub.
-      - name: Publish .deb
-        if: success()
-        run: |
-          set -eu
-          mkdir -p ci-logs
-          cp packages/*.deb ci-logs/
-          ls -l ci-logs/*.deb
-
-      # Публикуем лог в ветку ci-logs: так причину падения видно без входа в GitHub.
-      # raw.githubusercontent.com/vaibcode-dev/FluidX/ci-logs/build.log
-      - name: Publish build log
+      # Публикуем артефакты в корень ветки ci-logs (без входа в GitHub):
+      #   .../raw/ci-logs/build.log
+      #   .../raw/ci-logs/<package>.deb
+      - name: Publish artifacts
         if: always()
         run: |
           set -u
-          mkdir -p ci-logs
-          if [ -f build.log ]; then cp build.log ci-logs/build.log; fi
+          PUB="${RUNNER_TEMP}/pub"
+          rm -rf "$PUB"
+          git worktree add --detach "$PUB"
+          cd "$PUB"
+          git switch --orphan ci-logs-release
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+
+          cp "$GITHUB_WORKSPACE/build.log" ./build.log 2>/dev/null || true
+          cp "$GITHUB_WORKSPACE"/packages/*.deb ./ 2>/dev/null || true
+
           {
             echo "run: ${{ github.run_number }}"
             echo "sha: ${{ github.sha }}"
             echo "status: ${{ job.status }}"
             echo "date: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            echo
-            echo "--- theos/makefiles/common.mk: $([ -f "${THEOS}/makefiles/common.mk" ] && echo ok || echo MISSING)"
-            echo "--- sdks:"
-            ls "${THEOS}/sdks" 2>/dev/null || echo "(нет каталога)"
-            echo "--- packages:"
-            ls -l packages 2>/dev/null || echo "(нет каталога)"
-          } > ci-logs/status.txt
+          } > status.txt
+
           git config user.name "FluidX CI"
           git config user.email "ci@users.noreply.github.com"
-          git add -f ci-logs
-          git commit -m "CI log: run ${{ github.run_number }} (${{ job.status }})" || exit 0
+          git add -A
+          git commit -qm "CI: run ${{ github.run_number }} (${{ job.status }})" || exit 0
           git push --force origin HEAD:refs/heads/ci-logs
