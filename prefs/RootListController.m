@@ -66,7 +66,7 @@ static void SpawnCommand(const char *path, const char *arg1, const char *arg2) {
 
 			PSSpecifier *group = [PSSpecifier emptyGroupSpecifier];
 			[group setProperty:diag forKey:@"footerText"];
-			_specifiers = @[ group ];
+			_specifiers = [NSMutableArray arrayWithObject:group];
 		}
 	}
 	return _specifiers;
