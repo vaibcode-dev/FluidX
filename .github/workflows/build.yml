@@ -51,6 +51,39 @@ jobs:
           path: packages/*.deb
           if-no-files-found: error
 
+      - name: Read version
+        id: version
+        if: success()
+        run: |
+          set -euo pipefail
+          VALUE=$(awk '/^Version:/ {print $2}' control)
+          echo "value=${VALUE}" >> "$GITHUB_OUTPUT"
+
+      # Релиз с .deb. Версия берётся из control; если в ней есть beta/alpha,
+      # релиз помечается как pre-release.
+      - name: Create GitHub Release
+        if: success() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          set -euo pipefail
+          TAG="v${VERSION}"
+          PRE=""
+          case "$VERSION" in
+            *alpha*|*beta*|*rc*) PRE="--prerelease" ;;
+          esac
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Релиз $TAG уже есть — обновляю файл"
+            gh release upload "$TAG" packages/*.deb --clobber
+          else
+            gh release create "$TAG" packages/*.deb $PRE \
+              --title "FluidX ${VERSION}" \
+              --target "$GITHUB_SHA" \
+              --notes-file RELEASE_NOTES.md
+          fi
+
       # Публикуем артефакты в корень ветки ci-logs (без входа в GitHub):
       #   .../raw/ci-logs/build.log
       #   .../raw/ci-logs/<package>.deb

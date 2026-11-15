@@ -106,11 +106,17 @@ git push -u origin main
 **Готовая сборка (без GitHub-аккаунта):**
 
 ```
-https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.1.0_iphoneos-arm64.deb
+https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.1.0-beta_iphoneos-arm64.deb
 ```
+
+Страница релиза (там же `.deb` прикреплён файлом):
+<https://github.com/vaibcode-dev/FluidX/releases>
 
 Открой ссылку в Safari на iPhone → «Скачать» → в Filza открой файл → **Install**.
 (Ветка `ci-logs` — публичная, там же лежит `build.log` последней сборки.)
+
+> Текущая версия — **0.1.0-beta**: помечена как pre-release, потому что твик
+> ещё не проверен на живом устройстве.
 
 Либо вручную:
 
