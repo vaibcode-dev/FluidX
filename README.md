@@ -46,7 +46,7 @@
 | Производительность | режим «без блюра» — легче GPU на A10 |
 | Пункт управления | свайп сверху справа, фикс анимации |
 | Применение | respring, сброс настроек |
-| О твике | GitHub, Telegram [@angel_gtag](https://t.me/angel_gtag), лог сборки |
+| О твике | GitHub, Telegram-канал [@a10tweaks](https://t.me/a10tweaks), лог сборки |
 
 Приложение пишет тот же plist, что читает твик
 (`/var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist`), поэтому
@@ -121,7 +121,7 @@ git push -u origin main
 **Готовая сборка (без GitHub-аккаунта):**
 
 ```
-https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.3.0-beta_iphoneos-arm64.deb
+https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.3.1-beta_iphoneos-arm64.deb
 ```
 
 Страница релиза (там же `.deb` прикреплён файлом):
@@ -136,7 +136,7 @@ https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.
 /var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist
 ```
 
-> Текущая версия — **0.3.0-beta**: помечена как pre-release, потому что твик
+> Текущая версия — **0.3.1-beta**: помечена как pre-release, потому что твик
 > ещё не проверен на всех прошивках iOS 15.
 
 Либо вручную:
@@ -165,7 +165,7 @@ https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.
 `uicache` в `postinst`. Если иконки нет:
 
 1. Проверь, что пакет установлен: **Sileo → Установленные → FluidX**,
-   версия должна быть `0.3.0-beta` (не `0.2.x`).
+   версия должна быть `0.3.1-beta` (не `0.2.x`).
 2. Открой Filza → `/var/mobile/FluidX-install.txt` — там лог `postinst`:
    что нашлось, что удалилось и с каким кодом отработал `uicache`.
 3. Запусти регистрацию вручную: в Filza открой
@@ -211,12 +211,12 @@ powershell -ExecutionPolicy Bypass -File tools\check-repo.ps1
 ### 5. Артефакт
 
 Внизу страницы запуска — **Artifacts → FluidX-deb**. Внутри zip лежит
-`com.dolboebvaibcode.fluidx_0.3.0-beta_iphoneos-arm64.deb`.
+`com.dolboebvaibcode.fluidx_0.3.1-beta_iphoneos-arm64.deb`.
 
 Проверка файла до установки:
 
 ```powershell
-python tools\inspect_deb.py "путь\к\com.dolboebvaibcode.fluidx_0.3.0-beta_iphoneos-arm64.deb"
+python tools\inspect_deb.py "путь\к\com.dolboebvaibcode.fluidx_0.3.1-beta_iphoneos-arm64.deb"
 ```
 
 Скрипт покажет package id, архитектуру, пути `/var/jb`, тип Mach-O и фильтр

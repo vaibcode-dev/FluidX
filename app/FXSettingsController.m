@@ -16,7 +16,7 @@ typedef NS_ENUM(NSInteger, FXRowType) {
 
 static NSString *FXVersionString(void) {
 	NSString *version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-	return version ?: @"0.3.0";
+	return version ?: @"0.3.1";
 }
 
 static void FXSpawn(const char *path, const char *arg1, const char *arg2) {
@@ -130,7 +130,8 @@ static void FXSpawn(const char *path, const char *arg1, const char *arg2) {
 		    @"Всё на ваш страх и риск.\n\n"
 		    @"Настройки хранятся в /var/mobile/Library/Preferences/"
 		    @"com.dolboebvaibcode.fluidx.plist — %@.\n"
-		    @"Если ползунки не влияют на жесты, пришли скриншот этого экрана.",
+		    @"Баги — в канал @a10tweaks: если ползунки не влияют на жесты, "
+		    @"пришли скриншот этого экрана.",
 		    FXVersionString(),
 		    [[NSFileManager defaultManager]
 		        fileExistsAtPath:@"/var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist"]
@@ -170,7 +171,7 @@ static void FXSpawn(const char *path, const char *arg1, const char *arg2) {
 		],
 		@[
 			@{ @"type" : @(FXRowButton), @"title" : @"GitHub: vaibcode-dev/FluidX", @"action" : @"github" },
-			@{ @"type" : @(FXRowButton), @"title" : @"Telegram: @angel_gtag", @"action" : @"telegram" },
+			@{ @"type" : @(FXRowButton), @"title" : @"Telegram-канал: @a10tweaks", @"action" : @"telegram" },
 			@{ @"type" : @(FXRowButton), @"title" : @"Последний лог сборки", @"action" : @"buildlog" },
 		],
 	];
@@ -371,7 +372,7 @@ static void FXSpawn(const char *path, const char *arg1, const char *arg2) {
 	} else if ([action isEqualToString:@"github"]) {
 		[self openURLString:@"https://github.com/vaibcode-dev/FluidX"];
 	} else if ([action isEqualToString:@"telegram"]) {
-		[self openURLString:@"https://t.me/angel_gtag"];
+		[self openURLString:@"https://t.me/a10tweaks"];
 	} else if ([action isEqualToString:@"buildlog"]) {
 		[self openURLString:@"https://github.com/vaibcode-dev/FluidX/blob/ci-logs/build.log"];
 	}
