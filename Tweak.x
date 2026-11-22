@@ -5,6 +5,7 @@
 // перенастроить внешний вид полоски и Пункта управления.
 
 #import <UIKit/UIKit.h>
+#import <objc/runtime.h>
 
 // Приватные классы SpringBoard/MaterialKit. Заголовков в SDK нет,
 // поэтому объявляем сами — иначе компилятор не знает их свойств.
@@ -49,16 +50,37 @@ static NSUserDefaults *Prefs(void) {
 	return defaults;
 }
 
-// "#RRGGBB" / "RRGGBB" / "#RRGGBBAA" -> UIColor
+// "#RRGGBB" / "RRGGBB" / "#RRGGBBAA" / "#RGB" / "#RGBA" -> UIColor
 static UIColor *ColorFromHex(NSString *hex) {
 	if (![hex isKindOfClass:[NSString class]] || hex.length == 0) {
 		return nil;
 	}
 
-	NSString *clean = [[hex stringByReplacingOccurrencesOfString:@"#" withString:@""]
-		stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	NSString *clean = [[[hex stringByReplacingOccurrencesOfString:@"#" withString:@""]
+		stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]
+		uppercaseString];
+
+	// Короткая запись: FFF -> FFFFFF, FF2D55AA -> как есть.
+	if (clean.length == 3 || clean.length == 4) {
+		NSMutableString *expanded = [NSMutableString stringWithCapacity:clean.length * 2];
+		for (NSUInteger i = 0; i < clean.length; i++) {
+			unichar c = [clean characterAtIndex:i];
+			[expanded appendFormat:@"%C%C", c, c];
+		}
+		clean = expanded;
+	}
+
 	if (clean.length != 6 && clean.length != 8) {
 		return nil;
+	}
+
+	// NSScanner пропускает мусор после валидных цифр ("FF00GG" -> FF00),
+	// поэтому проверяем каждый символ сами.
+	NSCharacterSet *hexSet = [NSCharacterSet characterSetWithCharactersInString:@"0123456789ABCDEF"];
+	for (NSUInteger i = 0; i < clean.length; i++) {
+		if (![hexSet characterIsMember:[clean characterAtIndex:i]]) {
+			return nil;
+		}
 	}
 
 	unsigned int value = 0;
@@ -103,9 +125,40 @@ static void LoadPrefs(void) {
 	gBarColor = ColorFromHex([d stringForKey:@"homeBarColor"]);
 }
 
+// После изменения настроек SpringBoard не запускает layout сам, поэтому
+// цвет и размеры «залипали» до respring. Обходим все окна и просим полоски
+// перерисоваться — тогда настройки видно сразу.
+static void RefreshGrabbersInView(UIView *view) {
+	Class pillClass = NSClassFromString(@"MTLumaDodgePillView");
+	Class grabberClass = NSClassFromString(@"SBHomeGrabberView");
+
+	if ((pillClass && [view isKindOfClass:pillClass]) ||
+	    (grabberClass && [view isKindOfClass:grabberClass])) {
+		[view setNeedsLayout];
+	}
+
+	for (UIView *sub in view.subviews) {
+		RefreshGrabbersInView(sub);
+	}
+}
+
+static void RefreshGrabbers(void) {
+	for (UIScene *scene in [UIApplication sharedApplication].connectedScenes) {
+		if (![scene isKindOfClass:[UIWindowScene class]]) {
+			continue;
+		}
+		for (UIWindow *window in ((UIWindowScene *)scene).windows) {
+			RefreshGrabbersInView(window);
+		}
+	}
+}
+
 static void PrefsChanged(CFNotificationCenterRef center, void *observer, CFStringRef name,
                          const void *object, CFDictionaryRef userInfo) {
 	LoadPrefs();
+	dispatch_async(dispatch_get_main_queue(), ^{
+		RefreshGrabbers();
+	});
 }
 
 #pragma mark - Включение штатного движка жестов
@@ -169,25 +222,74 @@ static void PrefsChanged(CFNotificationCenterRef center, void *observer, CFStrin
 
 %end
 
-// Цвет полоски. Полоска — материал (MTMaterialView), поэтому красим
-// аккуратно и только когда пользователь явно задал цвет.
+// Цвет полоски.
+//
+// MTLumaDodgePillView рисует системную белую/чёрную полоску своими подслоями
+// (luma dodge), поэтому одного backgroundColor мало: его перекрывает штатная
+// отрисовка. Плюс SpringBoard не запускает layout при смене настроек — цвет
+// «залипал» до respring. Поэтому рисуем свою непрозрачную капсулу поверх,
+// а системную отрисовку прячем.
+static char kFXPillKey;
+
 %hook MTLumaDodgePillView
 
 - (void)layoutSubviews {
 	%orig;
-	if (gEnabled && gBarColor) {
-		self.backgroundColor = gBarColor;
-		self.layer.backgroundColor = gBarColor.CGColor;
+
+	UIView *pill = objc_getAssociatedObject(self, &kFXPillKey);
+
+	if (!gEnabled || !gBarColor) {
+		if (pill) {
+			[pill removeFromSuperview];
+			objc_setAssociatedObject(self, &kFXPillKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+		}
+		return;
 	}
+
+	// Геометрия штатной полоски: объединяем кадры её подслоёв, чтобы наша
+	// капсула совпадала с ней и повторяла «растягивание» во время свайпа.
+	CGRect pillRect = CGRectNull;
+	for (UIView *sub in self.subviews) {
+		if (sub == pill) {
+			continue;
+		}
+		pillRect = CGRectIsNull(pillRect) ? sub.frame : CGRectUnion(pillRect, sub.frame);
+	}
+	pillRect = CGRectIntersection(pillRect, self.bounds);
+	if (CGRectIsNull(pillRect) || pillRect.size.width < 1.0 || pillRect.size.height < 1.0) {
+		pillRect = self.bounds;
+	}
+
+	if (!pill) {
+		pill = [[UIView alloc] initWithFrame:pillRect];
+		pill.userInteractionEnabled = NO;
+		objc_setAssociatedObject(self, &kFXPillKey, pill, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+		[self addSubview:pill];
+	}
+
+	// Прячем штатную отрисовку, иначе белая/чёрная полоска перекроет цвет.
+	for (UIView *sub in self.subviews) {
+		if (sub != pill) {
+			sub.hidden = YES;
+		}
+	}
+
+	pill.frame = pillRect;
+	pill.backgroundColor = gBarColor;
+	pill.alpha = gBarAlpha;
+	pill.layer.cornerRadius = CGRectGetHeight(pillRect) / 2.0;
+	pill.layer.masksToBounds = YES;
+	[self bringSubviewToFront:pill];
 }
 
 %end
 
-// Прозрачность полоски: альфа системная умножается на пользовательскую.
+// Прозрачность. У цветной полоски альфу выставляем своей капсуле (см. выше) —
+// иначе она умножилась бы дважды. Для системной полоски работает штатный хук.
 %hook SBHomeGrabberView
 
 - (void)setAlpha:(CGFloat)alpha {
-	if (gEnabled && gBarAlpha < 1.0) {
+	if (gEnabled && !gBarColor && gBarAlpha < 1.0) {
 		%orig(alpha * gBarAlpha);
 		return;
 	}

@@ -16,7 +16,7 @@ typedef NS_ENUM(NSInteger, FXRowType) {
 
 static NSString *FXVersionString(void) {
 	NSString *version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-	return version ?: @"0.3.1";
+	return version ?: @"0.3.2";
 }
 
 static void FXSpawn(const char *path, const char *arg1, const char *arg2) {
@@ -26,6 +26,81 @@ static void FXSpawn(const char *path, const char *arg1, const char *arg2) {
 	const char *argv[] = { path, arg1, arg2, NULL };
 	pid_t pid = 0;
 	posix_spawn(&pid, path, NULL, NULL, (char *const *)argv, environ);
+}
+
+#pragma mark - Цвет
+
+// Те же правила, что в твике: RRGGBB, RRGGBBAA, RGB, RGBA, с # или без.
+static UIColor *FXColorFromHex(NSString *hex) {
+	if (![hex isKindOfClass:[NSString class]] || hex.length == 0) {
+		return nil;
+	}
+
+	NSString *clean = [[[hex stringByReplacingOccurrencesOfString:@"#" withString:@""]
+		stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]
+		uppercaseString];
+
+	if (clean.length == 3 || clean.length == 4) {
+		NSMutableString *expanded = [NSMutableString stringWithCapacity:clean.length * 2];
+		for (NSUInteger i = 0; i < clean.length; i++) {
+			unichar c = [clean characterAtIndex:i];
+			[expanded appendFormat:@"%C%C", c, c];
+		}
+		clean = expanded;
+	}
+
+	if (clean.length != 6 && clean.length != 8) {
+		return nil;
+	}
+
+	NSCharacterSet *hexSet = [NSCharacterSet characterSetWithCharactersInString:@"0123456789ABCDEF"];
+	for (NSUInteger i = 0; i < clean.length; i++) {
+		if (![hexSet characterIsMember:[clean characterAtIndex:i]]) {
+			return nil;
+		}
+	}
+
+	unsigned int value = 0;
+	NSScanner *scanner = [NSScanner scannerWithString:clean];
+	if (![scanner scanHexInt:&value]) {
+		return nil;
+	}
+
+	CGFloat r, g, b, a = 1.0;
+	if (clean.length == 8) {
+		r = ((value >> 24) & 0xFF) / 255.0;
+		g = ((value >> 16) & 0xFF) / 255.0;
+		b = ((value >> 8) & 0xFF) / 255.0;
+		a = (value & 0xFF) / 255.0;
+	} else {
+		r = ((value >> 16) & 0xFF) / 255.0;
+		g = ((value >> 8) & 0xFF) / 255.0;
+		b = (value & 0xFF) / 255.0;
+	}
+	return [UIColor colorWithRed:r green:g blue:b alpha:a];
+}
+
+// Возвращает нормализованную строку (без #, капсом) или nil, если ввод ещё
+// неполный/невалидный — такой ввод не сохраняем, чтобы не сбрасывать цвет.
+static NSString *FXCleanHex(NSString *text) {
+	NSString *clean = [[[text ?: @"" stringByReplacingOccurrencesOfString:@"#" withString:@""]
+		stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]
+		uppercaseString];
+
+	if (clean.length == 0) {
+		return @"";
+	}
+	if (clean.length != 3 && clean.length != 4 && clean.length != 6 && clean.length != 8) {
+		return nil;
+	}
+
+	NSCharacterSet *hexSet = [NSCharacterSet characterSetWithCharactersInString:@"0123456789ABCDEF"];
+	for (NSUInteger i = 0; i < clean.length; i++) {
+		if (![hexSet characterIsMember:[clean characterAtIndex:i]]) {
+			return nil;
+		}
+	}
+	return clean;
 }
 
 #pragma mark - Ячейка с ползунком
@@ -117,11 +192,11 @@ static void FXSpawn(const char *path, const char *arg1, const char *arg2) {
 
 	self.footers = @[
 		@"Используется родной движок жестов SpringBoard, поэтому анимации плавные и не нагружают систему.",
-		@"0 — системный размер. Прозрачность 1.00 — как в системе. Цвет задаётся в HEX: FF2D55 или 00A3FF. Пустое поле — системный цвет.",
+		@"0 — системный размер. Прозрачность 1.00 — как в системе. Цвет: HEX без # — FF2D55, 00A3FF, 3FA или 3FA8. Пустое поле — системный цвет.",
 		@"1.00 — как в системе. Меньше — быстрее, больше — медленнее.",
 		@"Отключает размытие подложек (Пункт управления, папки, Spotlight). На iPhone 7 легче GPU, но интерфейс выглядит плоским.",
 		@"При включённых жестах свайп снизу забирает «Домой», поэтому Пункт управления переносится на свайп сверху справа.",
-		@"Размеры полоски и цвет применяются после respring.",
+		@"Цвет и прозрачность применяются сразу, без respring. Если полоска не обновилась — сделай respring.",
 		[NSString stringWithFormat:
 		    @"FluidX %@ · com.dolboebvaibcode.fluidx · iOS 15 rootless\n\n"
 		    @"Твик написан нейросетью (ИИ) в учебных целях. Автор не несёт никакой "
@@ -275,9 +350,21 @@ static void FXSpawn(const char *path, const char *arg1, const char *arg2) {
 		}
 		cell.textLabel.text = row[@"title"];
 
-		UITextField *field = (UITextField *)cell.accessoryView;
-		if (![field isKindOfClass:[UITextField class]]) {
-			field = [[UITextField alloc] initWithFrame:CGRectMake(0, 0, 140, 32)];
+		UIStackView *stack = [cell.accessoryView isKindOfClass:[UIStackView class]]
+		                         ? (UIStackView *)cell.accessoryView
+		                         : nil;
+		UIView *swatch = stack.arrangedSubviews.firstObject;
+		UITextField *field = (UITextField *)stack.arrangedSubviews.lastObject;
+
+		if (!field) {
+			swatch = [[UIView alloc] init];
+			swatch.translatesAutoresizingMaskIntoConstraints = NO;
+			swatch.layer.cornerRadius = 11;
+			swatch.layer.masksToBounds = YES;
+			swatch.layer.borderWidth = 1.0 / [UIScreen mainScreen].scale;
+			swatch.layer.borderColor = [UIColor separatorColor].CGColor;
+
+			field = [[UITextField alloc] init];
 			field.textAlignment = NSTextAlignmentRight;
 			field.borderStyle = UITextBorderStyleNone;
 			field.autocapitalizationType = UITextAutocapitalizationTypeAllCharacters;
@@ -286,11 +373,28 @@ static void FXSpawn(const char *path, const char *arg1, const char *arg2) {
 			field.returnKeyType = UIReturnKeyDone;
 			field.clearButtonMode = UITextFieldViewModeWhileEditing;
 			field.delegate = self;
-			cell.accessoryView = field;
+			[field addTarget:self
+			          action:@selector(textFieldChanged:)
+			    forControlEvents:UIControlEventEditingChanged];
+
+			stack = [[UIStackView alloc] initWithArrangedSubviews:@[ swatch, field ]];
+			stack.axis = UILayoutConstraintAxisHorizontal;
+			stack.spacing = 8;
+			stack.alignment = UIStackViewAlignmentCenter;
+			cell.accessoryView = stack;
+
+			[NSLayoutConstraint activateConstraints:@[
+				[swatch.widthAnchor constraintEqualToConstant:22],
+				[swatch.heightAnchor constraintEqualToConstant:22],
+				[field.widthAnchor constraintEqualToConstant:120],
+			]];
 		}
+
 		field.tag = tag;
 		field.placeholder = row[@"placeholder"];
-		field.text = [defaults stringForKey:row[@"key"]];
+		NSString *stored = [defaults stringForKey:row[@"key"]];
+		field.text = stored;
+		swatch.backgroundColor = FXColorFromHex(stored) ?: [UIColor systemGray4Color];
 		return cell;
 	}
 
@@ -331,24 +435,39 @@ static void FXSpawn(const char *path, const char *arg1, const char *arg2) {
 	}
 }
 
+- (void)updateSwatchForField:(UITextField *)field color:(UIColor *)color {
+	UIView *swatch = ((UIStackView *)field.superview).arrangedSubviews.firstObject;
+	swatch.backgroundColor = color ?: [UIColor systemGray4Color];
+}
+
+// Применяем цвет сразу, как только ввод стал валидным (3/4/6/8 hex-цифр),
+// не дожидаясь закрытия клавиатуры — иначе кажется, что «ничего не работает».
+- (void)textFieldChanged:(UITextField *)field {
+	NSDictionary *row = [self rowForTag:field.tag];
+	if (!row) {
+		return;
+	}
+
+	NSString *value = FXCleanHex(field.text);
+	if (!value) {
+		return; // неполный или невалидный ввод — ждём дальше
+	}
+
+	FXSetValue(row[@"key"], value);
+	[self updateSwatchForField:field color:FXColorFromHex(value)];
+}
+
 - (void)textFieldDidEndEditing:(UITextField *)field {
 	NSDictionary *row = [self rowForTag:field.tag];
 	if (!row) {
 		return;
 	}
 
-	NSString *value = [[field.text stringByTrimmingCharactersInSet:
-	                       [NSCharacterSet whitespaceAndNewlineCharacterSet]] uppercaseString];
-	value = [value stringByReplacingOccurrencesOfString:@"#" withString:@""];
-
-	NSCharacterSet *hex = [NSCharacterSet characterSetWithCharactersInString:@"0123456789ABCDEF"];
-	NSCharacterSet *other = [hex invertedSet];
-	if ([value rangeOfCharacterFromSet:other].location != NSNotFound) {
-		value = @"";
-	}
-
+	// Невалидный ввод не сохраняем: возвращаем системный цвет (пусто).
+	NSString *value = FXCleanHex(field.text) ?: @"";
 	FXSetValue(row[@"key"], value);
 	field.text = value;
+	[self updateSwatchForField:field color:FXColorFromHex(value)];
 }
 
 - (BOOL)textFieldShouldReturn:(UITextField *)field {
