@@ -16,7 +16,7 @@ typedef NS_ENUM(NSInteger, FXRowType) {
 
 static NSString *FXVersionString(void) {
 	NSString *version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-	return version ?: @"0.3.2";
+	return version ?: @"0.3.3";
 }
 
 static void FXSpawn(const char *path, const char *arg1, const char *arg2) {
@@ -350,21 +350,25 @@ static NSString *FXCleanHex(NSString *text) {
 		}
 		cell.textLabel.text = row[@"title"];
 
-		UIStackView *stack = [cell.accessoryView isKindOfClass:[UIStackView class]]
-		                         ? (UIStackView *)cell.accessoryView
-		                         : nil;
-		UIView *swatch = stack.arrangedSubviews.firstObject;
-		UITextField *field = (UITextField *)stack.arrangedSubviews.lastObject;
+		// accessoryView не дружит с Auto Layout: если у контейнера нулевой frame,
+		// поле не получает касаний. Поэтому всё на явных frame.
+		UIView *container = cell.accessoryView;
+		UIView *swatch = container.subviews.firstObject;
+		UIView *last = container.subviews.lastObject;
+		UITextField *field = [last isKindOfClass:[UITextField class]] ? (UITextField *)last : nil;
 
 		if (!field) {
-			swatch = [[UIView alloc] init];
-			swatch.translatesAutoresizingMaskIntoConstraints = NO;
+			container = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 152, 32)];
+
+			swatch = [[UIView alloc] initWithFrame:CGRectMake(0, 5, 22, 22)];
+			swatch.backgroundColor = [UIColor systemGray4Color];
+			swatch.userInteractionEnabled = NO;
 			swatch.layer.cornerRadius = 11;
 			swatch.layer.masksToBounds = YES;
 			swatch.layer.borderWidth = 1.0 / [UIScreen mainScreen].scale;
 			swatch.layer.borderColor = [UIColor separatorColor].CGColor;
 
-			field = [[UITextField alloc] init];
+			field = [[UITextField alloc] initWithFrame:CGRectMake(30, 0, 122, 32)];
 			field.textAlignment = NSTextAlignmentRight;
 			field.borderStyle = UITextBorderStyleNone;
 			field.autocapitalizationType = UITextAutocapitalizationTypeAllCharacters;
@@ -377,17 +381,9 @@ static NSString *FXCleanHex(NSString *text) {
 			          action:@selector(textFieldChanged:)
 			    forControlEvents:UIControlEventEditingChanged];
 
-			stack = [[UIStackView alloc] initWithArrangedSubviews:@[ swatch, field ]];
-			stack.axis = UILayoutConstraintAxisHorizontal;
-			stack.spacing = 8;
-			stack.alignment = UIStackViewAlignmentCenter;
-			cell.accessoryView = stack;
-
-			[NSLayoutConstraint activateConstraints:@[
-				[swatch.widthAnchor constraintEqualToConstant:22],
-				[swatch.heightAnchor constraintEqualToConstant:22],
-				[field.widthAnchor constraintEqualToConstant:120],
-			]];
+			[container addSubview:swatch];
+			[container addSubview:field];
+			cell.accessoryView = container;
 		}
 
 		field.tag = tag;
@@ -436,7 +432,7 @@ static NSString *FXCleanHex(NSString *text) {
 }
 
 - (void)updateSwatchForField:(UITextField *)field color:(UIColor *)color {
-	UIView *swatch = ((UIStackView *)field.superview).arrangedSubviews.firstObject;
+	UIView *swatch = field.superview.subviews.firstObject;
 	swatch.backgroundColor = color ?: [UIColor systemGray4Color];
 }
 
@@ -475,11 +471,52 @@ static NSString *FXCleanHex(NSString *text) {
 	return YES;
 }
 
+- (void)promptForTextRow:(NSDictionary *)row {
+	UIAlertController *alert = [UIAlertController
+	    alertControllerWithTitle:row[@"title"]
+	                     message:@"HEX: FF2D55, #00A3FF, 3FA или 3FA8. Пусто — системный цвет."
+	              preferredStyle:UIAlertControllerStyleAlert];
+
+	[alert addTextFieldWithConfigurationHandler:^(UITextField *field) {
+		field.text = [FXDefaults() stringForKey:row[@"key"]];
+		field.placeholder = row[@"placeholder"];
+		field.autocapitalizationType = UITextAutocapitalizationTypeAllCharacters;
+		field.autocorrectionType = UITextAutocorrectionTypeNo;
+		field.spellCheckingType = UITextSpellCheckingTypeNo;
+	}];
+
+	[alert addAction:[UIAlertAction actionWithTitle:@"Отмена"
+	                                          style:UIAlertActionStyleCancel
+	                                        handler:nil]];
+
+	__weak UIAlertController *weakAlert = alert;
+	[alert addAction:[UIAlertAction actionWithTitle:@"Сохранить"
+	                                          style:UIAlertActionStyleDefault
+	                                        handler:^(UIAlertAction *action) {
+		                                        UIAlertController *strongAlert = weakAlert;
+		                                        NSString *value =
+		                                            FXCleanHex(strongAlert.textFields.firstObject.text) ?: @"";
+		                                        FXSetValue(row[@"key"], value);
+		                                        [self.tableView reloadData];
+	                                        }]];
+
+	[self presentViewController:alert animated:YES completion:nil];
+}
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
 	[tableView deselectRowAtIndexPath:indexPath animated:YES];
 
 	NSDictionary *row = self.sections[(NSUInteger)indexPath.section][(NSUInteger)indexPath.row];
-	if ((FXRowType)[row[@"type"] integerValue] != FXRowButton) {
+	FXRowType type = (FXRowType)[row[@"type"] integerValue];
+
+	// Запасной путь ввода: тап по строке с текстом открывает обычный алерт.
+	// Работает даже если поле в ячейке почему-то не получает касаний.
+	if (type == FXRowText) {
+		[self promptForTextRow:row];
+		return;
+	}
+
+	if (type != FXRowButton) {
 		return;
 	}
 
