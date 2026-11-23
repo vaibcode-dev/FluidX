@@ -11,6 +11,8 @@
 
 #define PREFS_DOMAIN @"com.dolboebvaibcode.fluidx"
 #define RELOAD_NOTIFICATION @"com.dolboebvaibcode.fluidx/ReloadPrefs"
+// CFSTR() принимает только C-строку, не NSString-литерал.
+#define RELOAD_NOTIFICATION_C "com.dolboebvaibcode.fluidx/ReloadPrefs"
 
 static BOOL gEnabled = YES;
 static double gKeyboardLift = 0.0;
@@ -23,7 +25,8 @@ static void LoadPrefs(void) {
 	// suite может смотреть в контейнер приложения, а не в общий plist.
 	// CFPreferences с kCFPreferencesCurrentUser/kCFPreferencesAnyHost читает
 	// тот же домен, куда пишет FluidX.app в SpringBoard/глобальные настройки.
-	CFDictionaryRef copied = CFPreferencesCopyMultiple(NULL, CFSTR(PREFS_DOMAIN),
+	CFDictionaryRef copied = CFPreferencesCopyMultiple(NULL,
+	                                                   CFSTR("com.dolboebvaibcode.fluidx"),
 	                                                   kCFPreferencesCurrentUser,
 	                                                   kCFPreferencesAnyHost);
 	NSDictionary *prefs = CFBridgingRelease(copied);
@@ -79,6 +82,6 @@ static void PrefsChanged(CFNotificationCenterRef center, void *observer, CFStrin
 	LoadPrefs();
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL,
 	                                (CFNotificationCallback)PrefsChanged,
-	                                CFSTR(RELOAD_NOTIFICATION), NULL,
+	                                CFSTR(RELOAD_NOTIFICATION_C), NULL,
 	                                CFNotificationSuspensionBehaviorDeliverImmediately);
 }

@@ -49,6 +49,8 @@ extern char **environ;
 
 #define PREFS_DOMAIN @"com.dolboebvaibcode.fluidx"
 #define RELOAD_NOTIFICATION @"com.dolboebvaibcode.fluidx/ReloadPrefs"
+// CFSTR() принимает только C-строку, поэтому для CoreFoundation — отдельный макрос.
+#define RELOAD_NOTIFICATION_C "com.dolboebvaibcode.fluidx/ReloadPrefs"
 
 static BOOL gEnabled = YES;
 static BOOL gShowHomeBar = YES;
@@ -821,6 +823,6 @@ static void FXApplyBarAnimation(UIView *pill) {
 	LoadPrefs();
 	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL,
 	                                (CFNotificationCallback)PrefsChanged,
-	                                CFSTR(RELOAD_NOTIFICATION), NULL,
+	                                CFSTR(RELOAD_NOTIFICATION_C), NULL,
 	                                CFNotificationSuspensionBehaviorDeliverImmediately);
 }
