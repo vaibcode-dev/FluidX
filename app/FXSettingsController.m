@@ -2,6 +2,7 @@
 
 #import <spawn.h>
 #import <unistd.h>
+#import <math.h>
 
 #import "FXPrefs.h"
 
@@ -11,12 +12,17 @@ typedef NS_ENUM(NSInteger, FXRowType) {
 	FXRowSwitch = 0,
 	FXRowSlider,
 	FXRowText,
+	FXRowChoice,
 	FXRowButton,
 };
 
 static NSString *FXVersionString(void) {
 	NSString *version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-	return version ?: @"0.3.3";
+	return version ?: @"0.4.0";
+}
+
+static NSString *FXBarImagePath(void) {
+	return @"/var/mobile/Library/FluidX/bar.png";
 }
 
 static void FXSpawn(const char *path, const char *arg1, const char *arg2) {
@@ -103,6 +109,31 @@ static NSString *FXCleanHex(NSString *text) {
 	return clean;
 }
 
+#pragma mark - Фото полоски
+
+// Фото может быть 4000×3000 и ~50 МБ в памяти SpringBoard. Для полоски
+// высотой 10 pt этого не нужно — уменьшаем до 512 px по длинной стороне.
+static UIImage *FXDownscaleImage(UIImage *image, CGFloat maxSide) {
+	if (!image) {
+		return nil;
+	}
+	CGSize size = image.size;
+	if (size.width <= 0.0 || size.height <= 0.0) {
+		return image;
+	}
+	CGFloat scale = MIN(1.0, maxSide / MAX(size.width, size.height));
+	if (scale >= 1.0) {
+		return image;
+	}
+	CGSize target = CGSizeMake(MAX(1.0, round(size.width * scale)),
+	                           MAX(1.0, round(size.height * scale)));
+	UIGraphicsImageRenderer *renderer =
+	    [[UIGraphicsImageRenderer alloc] initWithSize:target];
+	return [renderer imageWithActions:^(UIGraphicsImageRendererContext *context) {
+		[image drawInRect:CGRectMake(0, 0, target.width, target.height)];
+	}];
+}
+
 #pragma mark - Ячейка с ползунком
 
 @interface FXSliderCell : UITableViewCell
@@ -161,11 +192,20 @@ static NSString *FXCleanHex(NSString *text) {
 
 #pragma mark - Контроллер настроек
 
-@interface FXSettingsController () <UITextFieldDelegate>
+@interface FXSettingsController () <UITextFieldDelegate, UIImagePickerControllerDelegate,
+                                 UINavigationControllerDelegate>
 
 @property (nonatomic, copy) NSArray<NSString *> *headers;
 @property (nonatomic, copy) NSArray<NSString *> *footers;
 @property (nonatomic, copy) NSArray<NSArray<NSDictionary *> *> *sections;
+
+- (NSString *)titleForValue:(NSString *)value choices:(NSArray<NSDictionary *> *)choices;
+- (void)presentChoiceForRow:(NSDictionary *)row indexPath:(NSIndexPath *)indexPath;
+- (void)presentBarImageOptions;
+- (void)pickBarImage;
+- (void)removeBarImage;
+- (void)showMessage:(NSString *)text;
+- (void)promptForTextRow:(NSDictionary *)row;
 
 @end
 
@@ -182,6 +222,8 @@ static NSString *FXCleanHex(NSString *text) {
 - (void)buildModel {
 	self.headers = @[
 		@"Жесты iPhone X",
+		@"Кнопка Home",
+		@"Клавиатура",
 		@"Домашняя полоска",
 		@"Анимации",
 		@"Производительность",
@@ -192,11 +234,13 @@ static NSString *FXCleanHex(NSString *text) {
 
 	self.footers = @[
 		@"Используется родной движок жестов SpringBoard, поэтому анимации плавные и не нагружают систему.",
-		@"0 — системный размер. Прозрачность 1.00 — как в системе. Цвет: HEX без # — FF2D55, 00A3FF, 3FA или 3FA8. Пустое поле — системный цвет.",
+		@"«Как в системе» — обычное поведение кнопки. Любое другое действие заменяет нажатие Home (включая долгое). Если что-то пошло не так — верни «Как в системе».",
+		@"Поднимает клавиатуру над домашней полоской, чтобы она не мешала. 0 — как в системе. В уже открытых приложениях настройка применится после их перезапуска.",
+		@"0 — системный размер. Прозрачность 1.00 — как в системе. Цвет: HEX без # — FF2D55, 00A3FF, 3FA или 3FA8. Пустое поле — системный цвет. Фото и анимация работают поверх цвета.",
 		@"1.00 — как в системе. Меньше — быстрее, больше — медленнее.",
 		@"Отключает размытие подложек (Пункт управления, папки, Spotlight). На iPhone 7 легче GPU, но интерфейс выглядит плоским.",
 		@"При включённых жестах свайп снизу забирает «Домой», поэтому Пункт управления переносится на свайп сверху справа.",
-		@"Цвет и прозрачность применяются сразу, без respring. Если полоска не обновилась — сделай respring.",
+		@"Цвет, фото и анимация полоски применяются сразу, без respring. Если полоска не обновилась — сделай respring.",
 		[NSString stringWithFormat:
 		    @"FluidX %@ · com.dolboebvaibcode.fluidx · iOS 15 rootless\n\n"
 		    @"Твик написан нейросетью (ИИ) в учебных целях. Автор не несёт никакой "
@@ -205,6 +249,7 @@ static NSString *FXCleanHex(NSString *text) {
 		    @"Всё на ваш страх и риск.\n\n"
 		    @"Настройки хранятся в /var/mobile/Library/Preferences/"
 		    @"com.dolboebvaibcode.fluidx.plist — %@.\n"
+		    @"Фото полоски — /var/mobile/Library/FluidX/bar.png.\n"
 		    @"Баги — в канал @a10tweaks: если ползунки не влияют на жесты, "
 		    @"пришли скриншот этого экрана.",
 		    FXVersionString(),
@@ -220,6 +265,25 @@ static NSString *FXCleanHex(NSString *text) {
 			@{ @"type" : @(FXRowSwitch), @"title" : @"Показывать домашнюю полоску", @"key" : @"showHomeBar" },
 		],
 		@[
+			@{ @"type" : @(FXRowChoice),
+			   @"title" : @"Действие кнопки Home",
+			   @"key" : @"homeButtonAction",
+			   @"choices" : @[
+				   @{ @"value" : @"system", @"title" : @"Как в системе" },
+				   @{ @"value" : @"home", @"title" : @"Домой" },
+				   @{ @"value" : @"switcher", @"title" : @"Многозадачность" },
+				   @{ @"value" : @"lock", @"title" : @"Заблокировать" },
+				   @{ @"value" : @"screenshot", @"title" : @"Скриншот" },
+				   @{ @"value" : @"flashlight", @"title" : @"Фонарик" },
+				   @{ @"value" : @"respring", @"title" : @"Respring" },
+				   @{ @"value" : @"nothing", @"title" : @"Ничего не делать" },
+			   ] },
+		],
+		@[
+			@{ @"type" : @(FXRowSlider), @"title" : @"Поднять клавиатуру", @"key" : @"keyboardLift",
+			   @"min" : @0.0, @"max" : @40.0, @"fmt" : @"%.0f pt" },
+		],
+		@[
 			@{ @"type" : @(FXRowSlider), @"title" : @"Высота", @"key" : @"homeBarHeight",
 			   @"min" : @0.0, @"max" : @12.0, @"fmt" : @"%.1f" },
 			@{ @"type" : @(FXRowSlider), @"title" : @"Ширина", @"key" : @"homeBarWidth",
@@ -228,6 +292,17 @@ static NSString *FXCleanHex(NSString *text) {
 			   @"min" : @0.1, @"max" : @1.0, @"fmt" : @"%.2f" },
 			@{ @"type" : @(FXRowText), @"title" : @"Цвет (HEX)", @"key" : @"homeBarColor",
 			   @"placeholder" : @"FF2D55" },
+			@{ @"type" : @(FXRowChoice),
+			   @"title" : @"Анимация полоски",
+			   @"key" : @"homeBarAnimation",
+			   @"choices" : @[
+				   @{ @"value" : @"none", @"title" : @"Нет" },
+				   @{ @"value" : @"pulse", @"title" : @"Пульсация" },
+				   @{ @"value" : @"glow", @"title" : @"Свечение" },
+				   @{ @"value" : @"rainbow", @"title" : @"Радуга" },
+			   ] },
+			@{ @"type" : @(FXRowSwitch), @"title" : @"Скрывать полоску в играх", @"key" : @"hideBarInGames" },
+			@{ @"type" : @(FXRowButton), @"title" : @"Фото полоски (выбрать/удалить)", @"action" : @"barimage" },
 		],
 		@[
 			@{ @"type" : @(FXRowSlider), @"title" : @"Скорость анимаций", @"key" : @"animSpeed",
@@ -295,6 +370,15 @@ static NSString *FXCleanHex(NSString *text) {
 - (NSString *)formatValue:(double)value row:(NSDictionary *)row {
 	NSString *format = row[@"fmt"] ?: @"%.2f";
 	return [NSString stringWithFormat:format, value];
+}
+
+- (NSString *)titleForValue:(NSString *)value choices:(NSArray<NSDictionary *> *)choices {
+	for (NSDictionary *choice in choices) {
+		if ([choice[@"value"] isEqualToString:value]) {
+			return choice[@"title"];
+		}
+	}
+	return [choices.firstObject[@"title"] copy];
 }
 
 #pragma mark - Ячейки
@@ -391,6 +475,20 @@ static NSString *FXCleanHex(NSString *text) {
 		NSString *stored = [defaults stringForKey:row[@"key"]];
 		field.text = stored;
 		swatch.backgroundColor = FXColorFromHex(stored) ?: [UIColor systemGray4Color];
+		return cell;
+	}
+
+	case FXRowChoice: {
+		UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"choice"];
+		if (!cell) {
+			cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1
+			                              reuseIdentifier:@"choice"];
+		}
+		cell.textLabel.text = row[@"title"];
+		NSString *stored = [defaults stringForKey:row[@"key"]];
+		cell.detailTextLabel.text = [self titleForValue:stored choices:row[@"choices"]];
+		cell.detailTextLabel.textColor = [UIColor secondaryLabelColor];
+		cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
 		return cell;
 	}
 
@@ -516,6 +614,11 @@ static NSString *FXCleanHex(NSString *text) {
 		return;
 	}
 
+	if (type == FXRowChoice) {
+		[self presentChoiceForRow:row indexPath:indexPath];
+		return;
+	}
+
 	if (type != FXRowButton) {
 		return;
 	}
@@ -525,6 +628,8 @@ static NSString *FXCleanHex(NSString *text) {
 		[self respring];
 	} else if ([action isEqualToString:@"reset"]) {
 		[self confirmReset];
+	} else if ([action isEqualToString:@"barimage"]) {
+		[self presentBarImageOptions];
 	} else if ([action isEqualToString:@"github"]) {
 		[self openURLString:@"https://github.com/vaibcode-dev/FluidX"];
 	} else if ([action isEqualToString:@"telegram"]) {
@@ -532,6 +637,130 @@ static NSString *FXCleanHex(NSString *text) {
 	} else if ([action isEqualToString:@"buildlog"]) {
 		[self openURLString:@"https://github.com/vaibcode-dev/FluidX/blob/ci-logs/build.log"];
 	}
+}
+
+#pragma mark - Выбор из списка
+
+- (void)presentChoiceForRow:(NSDictionary *)row indexPath:(NSIndexPath *)indexPath {
+	UIAlertController *sheet = [UIAlertController
+	    alertControllerWithTitle:row[@"title"]
+	                     message:nil
+	              preferredStyle:UIAlertControllerStyleActionSheet];
+
+	NSString *current = [FXDefaults() stringForKey:row[@"key"]];
+	for (NSDictionary *choice in row[@"choices"]) {
+		NSString *value = choice[@"value"];
+		NSString *title = choice[@"title"];
+		if ([value isEqualToString:current]) {
+			title = [title stringByAppendingString:@"  ✓"];
+		}
+		[sheet addAction:[UIAlertAction actionWithTitle:title
+		                                          style:UIAlertActionStyleDefault
+		                                        handler:^(UIAlertAction *action) {
+			                                        FXSetValue(row[@"key"], value);
+			                                        [self.tableView
+			                                            reloadRowsAtIndexPaths:@[ indexPath ]
+			                                                  withRowAnimation:UITableViewRowAnimationNone];
+		                                        }]];
+	}
+	[sheet addAction:[UIAlertAction actionWithTitle:@"Отмена"
+	                                          style:UIAlertActionStyleCancel
+	                                        handler:nil]];
+
+	UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
+	if (cell) {
+		sheet.popoverPresentationController.sourceView = cell;
+		sheet.popoverPresentationController.sourceRect = cell.bounds;
+	}
+	[self presentViewController:sheet animated:YES completion:nil];
+}
+
+#pragma mark - Фото полоски
+
+- (void)presentBarImageOptions {
+	BOOL hasImage = [[NSFileManager defaultManager] fileExistsAtPath:FXBarImagePath()];
+
+	UIAlertController *sheet = [UIAlertController
+	    alertControllerWithTitle:@"Фото домашней полоски"
+	                     message:@"Картинка обрезается по форме полоски. Лучше выбирать логотип или узкий рисунок."
+	              preferredStyle:UIAlertControllerStyleActionSheet];
+
+	[sheet addAction:[UIAlertAction actionWithTitle:@"Выбрать из галереи"
+	                                          style:UIAlertActionStyleDefault
+	                                        handler:^(UIAlertAction *action) {
+		                                        [self pickBarImage];
+	                                        }]];
+	if (hasImage) {
+		[sheet addAction:[UIAlertAction actionWithTitle:@"Удалить фото"
+		                                          style:UIAlertActionStyleDestructive
+		                                        handler:^(UIAlertAction *action) {
+			                                        [self removeBarImage];
+		                                        }]];
+	}
+	[sheet addAction:[UIAlertAction actionWithTitle:@"Отмена"
+	                                          style:UIAlertActionStyleCancel
+	                                        handler:nil]];
+
+	sheet.popoverPresentationController.sourceView = self.view;
+	sheet.popoverPresentationController.sourceRect = self.view.bounds;
+	[self presentViewController:sheet animated:YES completion:nil];
+}
+
+- (void)pickBarImage {
+	if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary]) {
+		[self showMessage:@"Галерея недоступна."];
+		return;
+	}
+	UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+	picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+	picker.allowsEditing = YES;
+	picker.delegate = self;
+	[self presentViewController:picker animated:YES completion:nil];
+}
+
+- (void)removeBarImage {
+	[[NSFileManager defaultManager] removeItemAtPath:FXBarImagePath() error:NULL];
+	FXSetValue(@"homeBarImage", @"");
+	[self.tableView reloadData];
+}
+
+- (void)imagePickerController:(UIImagePickerController *)picker
+    didFinishPickingMediaWithInfo:(NSDictionary *)info {
+	UIImage *image = info[UIImagePickerControllerEditedImage] ?: info[UIImagePickerControllerOriginalImage];
+	[picker dismissViewControllerAnimated:YES completion:nil];
+	if (!image) {
+		return;
+	}
+
+	UIImage *scaled = FXDownscaleImage(image, 512.0);
+	NSData *png = UIImagePNGRepresentation(scaled);
+	NSString *path = FXBarImagePath();
+	[[NSFileManager defaultManager] createDirectoryAtPath:[path stringByDeletingLastPathComponent]
+	                          withIntermediateDirectories:YES
+	                                           attributes:nil
+	                                                error:NULL];
+
+	if (png && [png writeToFile:path atomically:YES]) {
+		FXSetValue(@"homeBarImage", path);
+		[self.tableView reloadData];
+		[self showMessage:@"Фото сохранено. Полоска обновится сразу; если нет — сделай Respring."];
+	} else {
+		[self showMessage:@"Не удалось сохранить фото в /var/mobile/Library/FluidX/."];
+	}
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
+	[picker dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)showMessage:(NSString *)text {
+	UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"FluidX"
+	                                                              message:text
+	                                                       preferredStyle:UIAlertControllerStyleAlert];
+	[alert addAction:[UIAlertAction actionWithTitle:@"OK"
+	                                          style:UIAlertActionStyleDefault
+	                                        handler:nil]];
+	[self presentViewController:alert animated:YES completion:nil];
 }
 
 #pragma mark - Кнопки
@@ -549,6 +778,9 @@ static NSString *FXCleanHex(NSString *text) {
 	[alert addAction:[UIAlertAction actionWithTitle:@"Сбросить"
 	                                          style:UIAlertActionStyleDestructive
 	                                        handler:^(UIAlertAction *action) {
+		                                        [[NSFileManager defaultManager]
+		                                            removeItemAtPath:FXBarImagePath()
+		                                                       error:NULL];
 		                                        FXResetAll();
 		                                        [self.tableView reloadData];
 		                                        [self respring];

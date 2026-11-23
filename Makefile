@@ -8,14 +8,14 @@ export INSTALL_TARGET_PROCESSES = SpringBoard
 
 # ВАЖНО: Theos читает SUBPROJECTS в момент подключения common.mk,
 # поэтому объявлять их нужно ДО include, иначе сабпроект игнорируется.
-SUBPROJECTS += app
+SUBPROJECTS += app keyboard
 
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = FluidX
 FluidX_FILES = Tweak.x
 FluidX_CFLAGS = -fobjc-arc -Wall
-FluidX_FRAMEWORKS = UIKit
+FluidX_FRAMEWORKS = UIKit QuartzCore AVFoundation
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 

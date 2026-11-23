@@ -47,7 +47,8 @@ APP=/var/jb/Applications/FluidX.app
 
 	echo
 	echo "=== Твик ==="
-	ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX.* 2>&1
+	ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX*.dylib \
+	      /var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX*.plist 2>&1
 } > "$LOG" 2>&1
 
 chmod 644 "$LOG" 2>/dev/null

@@ -1,8 +1,8 @@
 # FluidX
 
-Жесты iPhone X для iPhone 7 на iOS 15.x (rootless). Аналог GesturesXV, но:
-родной движок жестов SpringBoard вместо самописных распознавателей,
-настройки внешнего вида полоски и починка анимации Пункта управления.
+Жесты iPhone X для iPhone 7 на iOS 15.x (rootless). Аналог GesturesXV, но
+родной движок жестов SpringBoard вместо самописных распознавателей, плюс
+настройки полоски, кнопки Home и клавиатуры в отдельном приложении.
 
 Пакет: `com.dolboebvaibcode.fluidx` · архитектура `iphoneos-arm64` · iOS 15.0+
 
@@ -20,8 +20,8 @@
 > Sileo/Zebra, при необходимости — `Restore RootFS` в Dopamine).
 >
 > Твик не связан с Apple, не одобрен Apple и использует приватные API
-> (`SBHomeGestureSettings`, `SBFHomeGrabberSettings` и др.), поэтому
-> работоспособность на конкретной версии iOS не гарантируется.
+> (`SBHomeGestureSettings`, `SBFHomeGrabberSettings`, `SBLockScreenManager`
+> и др.), поэтому работоспособность на конкретной версии iOS не гарантируется.
 
 ---
 
@@ -33,15 +33,30 @@
 | Свайп снизу вверх + задержка | Многозадачность |
 | Свайп по нижнему краю влево/вправо | Переключение между приложениями |
 | Свайп сверху справа | Пункт управления |
-| Кнопка Home | Продолжает работать как раньше |
+| Кнопка Home | Настраивается: система, Домой, многозадачность, блокировка, скриншот, фонарик, respring или «ничего» |
 
-Плюс **отдельное приложение FluidX** с иконкой на рабочем столе (не в
-Настройках — там iOS 15 упорно не отдавала наш бандл настроек):
+Полоска:
+
+- высота, ширина, прозрачность и цвет в HEX;
+- **фото** вместо полоски (выбирается из галереи в приложении);
+- **анимация**: пульсация, свечение, радуга;
+- **скрытие в играх** (по переднему приложению: скрытый статус-бар или
+  только ландшафтные ориентации).
+
+Клавиатура:
+
+- ползунок **«Поднять клавиатуру»** (0–40 pt) — клавиатура поднимается выше,
+  чтобы домашняя полоска её не перекрывала. Работает во всех приложениях.
+
+Всё настраивается в **отдельном приложении FluidX** с иконкой на рабочем столе
+(не в Настройках — там iOS 15 упорно не отдавала наш бандл настроек):
 
 | Раздел | Что настраивается |
 |---|---|
 | Жесты iPhone X | включение, показ домашней полоски |
-| Домашняя полоска | высота, ширина, прозрачность, цвет в HEX |
+| Кнопка Home | действие физической кнопки Home |
+| Клавиатура | подъём клавиатуры над полоской |
+| Домашняя полоска | высота, ширина, прозрачность, цвет, анимация, фото, скрытие в играх |
 | Анимации | скорость интерфейса SpringBoard (0.5–2.0) |
 | Производительность | режим «без блюра» — легче GPU на A10 |
 | Пункт управления | свайп сверху справа, фикс анимации |
@@ -50,8 +65,9 @@
 
 Приложение пишет тот же plist, что читает твик
 (`/var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist`), поэтому
-изменения применяются сразу, без перезапуска приложения. Размер полоски и
-цвет — после respring.
+изменения применяются сразу. Цвет, фото и анимация полоски обновляются без
+respring; подъём клавиатуры подхватывается при следующем показе клавиатуры
+(в уже открытом приложении может понадобиться его перезапуск).
 
 ---
 
@@ -64,8 +80,9 @@
 2. **Нулевое вмешательство по умолчанию.** Размеры полоски переопределяются
    только если пользователь реально сдвинул слайдер (0 = системное значение),
    поэтому «растягивание» полоски при свайпе не ломается.
-3. **Хуки только на геттеры/сеттеры настроек**, а не на покадровые методы
-   (`layoutSubviews`, анимационные батчи). Нет работы в hot path кадров.
+3. **Клавиатура — отдельный маленький dylib.** Он грузится в приложения
+   (клавиатура рисуется внутри процесса приложения), но содержит только один
+   хук. Остальные хуки FluidX остаются в SpringBoard.
 4. **Настройки кэшируются** в статические переменные и перечитываются только
    по Darwin-уведомлению, а не при каждом вызове хука.
 
@@ -121,7 +138,7 @@ git push -u origin main
 **Готовая сборка (без GitHub-аккаунта):**
 
 ```
-https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.3.3-beta_iphoneos-arm64.deb
+https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.4.0-beta_iphoneos-arm64.deb
 ```
 
 Страница релиза (там же `.deb` прикреплён файлом):
@@ -130,13 +147,19 @@ https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.
 Открой ссылку в Safari на iPhone → «Скачать» → в Filza открой файл → **Install**.
 (Ветка `ci-logs` — публичная, там же лежит `build.log` последней сборки.)
 
+> ⚠️ После установки обязательно сделай **Respring** (в приложении FluidX есть
+> кнопка). Новый фильтр клавиатуры и хуки SpringBoard подхватываются только
+> после перезапуска SpringBoard.
+
 ```text
 /var/jb/Applications/FluidX.app
 /var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX.dylib + FluidX.plist
+/var/jb/Library/MobileSubstrate/DynamicLibraries/FluidXKeyboard.dylib + FluidXKeyboard.plist
 /var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist
+/var/mobile/Library/FluidX/bar.png            (если выбрано фото полоски)
 ```
 
-> Текущая версия — **0.3.3-beta**: помечена как pre-release, потому что твик
+> Текущая версия — **0.4.0-beta**: помечена как pre-release, потому что твик
 > ещё не проверен на всех прошивках iOS 15.
 
 Либо вручную:
@@ -150,22 +173,13 @@ https://github.com/vaibcode-dev/FluidX/raw/ci-logs/com.dolboebvaibcode.fluidx_0.
 5. Проверь: свайп снизу вверх должен уводить на домашний экран,
    снизу справа/слева — переключать приложения, сверху справа — Пункт управления.
 
-Файлы на устройстве (rootless):
-
-```
-/var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX.dylib
-/var/jb/Library/MobileSubstrate/DynamicLibraries/FluidX.plist
-/var/jb/Applications/FluidX.app
-/var/mobile/Library/Preferences/com.dolboebvaibcode.fluidx.plist
-```
-
 ### Если приложения FluidX нет на рабочем столе
 
 Приложение ставится в `/var/jb/Applications/FluidX.app` и регистрируется
 `uicache` в `postinst`. Если иконки нет:
 
 1. Проверь, что пакет установлен: **Sileo → Установленные → FluidX**,
-   версия должна быть `0.3.3-beta` (не `0.2.x`).
+   версия должна быть `0.4.0-beta` (не `0.2.x`).
 2. Открой Filza → `/var/mobile/FluidX-install.txt` — там лог `postinst`:
    что нашлось, что удалилось и с каким кодом отработал `uicache`.
 3. Запусти регистрацию вручную: в Filza открой
@@ -199,8 +213,8 @@ powershell -ExecutionPolicy Bypass -File tools\check-repo.ps1
 ### 3. Репозиторий на GitHub
 
 `https://github.com/ТВОЙ_ЛОГИН/FluidX` — в списке файлов должны быть `Tweak.x`,
-`Makefile`, `control` и папка `.github/workflows`. Хэш последнего коммита на сайте
-должен совпадать с локальным (`git log --oneline -1`).
+`Makefile`, `control`, папка `keyboard` и папка `.github/workflows`. Хэш
+последнего коммита на сайте должен совпадать с локальным (`git log --oneline -1`).
 
 ### 4. Сборка
 
@@ -211,26 +225,26 @@ powershell -ExecutionPolicy Bypass -File tools\check-repo.ps1
 ### 5. Артефакт
 
 Внизу страницы запуска — **Artifacts → FluidX-deb**. Внутри zip лежит
-`com.dolboebvaibcode.fluidx_0.3.3-beta_iphoneos-arm64.deb`.
+`com.dolboebvaibcode.fluidx_0.4.0-beta_iphoneos-arm64.deb`.
 
 Проверка файла до установки:
 
 ```powershell
-python tools\inspect_deb.py "путь\к\com.dolboebvaibcode.fluidx_0.3.3-beta_iphoneos-arm64.deb"
+python tools\inspect_deb.py "путь\к\com.dolboebvaibcode.fluidx_0.4.0-beta_iphoneos-arm64.deb"
 ```
 
-Скрипт покажет package id, архитектуру, пути `/var/jb`, тип Mach-O и фильтр
-SpringBoard. Если пишет «всё в порядке» — пакет собран правильно.
+Скрипт покажет package id, архитектуру, пути `/var/jb`, тип Mach-O и фильтры
+SpringBoard / клавиатуры. Если пишет «всё в порядке» — пакет собран правильно.
 
 ### 6. Телефон
 
 ```sh
 dpkg -l | grep fluidx                  # пакет установлен
-ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries/   # FluidX.dylib + FluidX.plist
+ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries/   # FluidX + FluidXKeyboard
 ```
 
 На рабочем столе должно появиться приложение **FluidX**, а в его настройках —
-все ползунки и тумблеры.
+все ползунки, списки и фото.
 
 ---
 
@@ -240,7 +254,11 @@ ls -l /var/jb/Library/MobileSubstrate/DynamicLibraries/   # FluidX.dylib + Fluid
 |---|---|
 | Жесты не появились | Проверь, что твик загружен: `ls /var/jb/Library/MobileSubstrate/DynamicLibraries/`, затем respring |
 | Настройки не применяются | Открой FluidX, нажми **Respring**; проверь, что в приложении стоит «Включить жесты» |
-| Цвет полоски не меняется | В 0.3.2+ цвет применяется сразу. Проверь ввод: `FF2D55`, `#00A3FF`, `3FA` или `3FA8` |
+| Цвет полоски не меняется | Цвет применяется сразу. Проверь ввод: `FF2D55`, `#00A3FF`, `3FA` или `3FA8` |
+| Кнопка Home не делает выбранное | Выбери действие в разделе **Кнопка Home** и сделай respring. «Как в системе» возвращает штатное поведение |
+| Клавиатура не поднялась | Увеличь ползунок и перезапусти приложение (клавиатура живёт внутри приложения). После установки нужен respring |
+| Фото полоски не появилось | Выбери фото заново; проверь, что есть `/var/mobile/Library/FluidX/bar.png`, затем respring |
+| Полоска видна в игре | Автоопределение по статус-бару/ориентациям. Пришли название игры — добавим правило |
 | Полоска есть, свайпы не работают | Другой билд SpringBoard: пришли лог `log stream --predicate 'process == "SpringBoard"'`, подберём имена методов |
 | Пункт управления открывается снизу | Включи «Свайп сверху справа» и сделай respring |
 | Анимация Пункта управления дёргается | Переключи «Чинить анимацию Пункта управления» |
@@ -259,11 +277,12 @@ log stream --predicate 'process == "SpringBoard"' --level debug
 ## Структура проекта
 
 ```
-Tweak.x                      — хуки SpringBoard
+Tweak.x                      — хуки SpringBoard (жесты, полоска, кнопка Home)
+keyboard/Tweak.x             — отдельный dylib: подъём клавиатуры в приложениях
 Makefile                     — arm64, iOS 15.0+, rootless
 control                      — метаданные пакета
 app/                         — приложение настроек (UIKit, без PreferenceLoader)
-app/Resources/Info.plist     — Info.plist приложения + иконки
+app/Resources/Info.plist     — Info.plist приложения + иконки + доступ к фото
 layout/DEBIAN/postinst       — uicache + чистка старых файлов 0.2.x
 .github/workflows/build.yml  — сборка .deb
 ```
@@ -278,4 +297,5 @@ layout/DEBIAN/postinst       — uicache + чистка старых файло�
 - Тонкая настройка порогов жестов (скорость/дистанция) — нужны точные имена
   методов из SpringBoard твоей прошивки, подберём по логам.
 - Отдельные переключатели для «свайп вверх + задержка» и горизонтальных свайпов.
+- Больше действий на кнопку Home (камера, диктофон, запуск приложения).
 - Пресеты цвета полоски вместо ручного ввода HEX.
